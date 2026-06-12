@@ -50,6 +50,7 @@ ALLOWLIST_WARNING_FILES = {
     "00_STEM_CELL/YTM_V1_2_TARGET.md",
     "00_STEM_CELL/LOCAL_STACK.md",
     "00_STEM_CELL/source_maps/V0_1_DONOR_MAP.md",
+    "00_STEM_CELL/rebuild/YTM_CODE_INSPECTION_DECISION.md",
     "scripts/safety/public_safety_audit.py",
     ".gitignore",
 }
