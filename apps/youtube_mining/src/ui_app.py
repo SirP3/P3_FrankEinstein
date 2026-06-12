@@ -77,6 +77,11 @@ if st.button("Create run folder"):
 if st.session_state.create_run_output:
     st.code(st.session_state.create_run_output)
 
+st.subheader("Workspace dashboard")
+
+if st.button("Run workspace dashboard"):
+    st.code(run_command(["python3", "scripts/status_dashboard.py"]))
+
 st.subheader("Current limitations")
 
 st.markdown("""
