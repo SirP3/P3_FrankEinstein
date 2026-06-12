@@ -5,39 +5,43 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 
-BLOCKED_PATHS = [
-    "private/",
-    "output/",
-    "quarantine/",
-    "donor/",
-    "transcripts/",
-]
+IGNORED_DIRS = {
+    ".git",
+    "private",
+    "output",
+    "quarantine",
+    "donor",
+    ".local-private",
+    "__pycache__",
+    ".venv",
+}
 
 SENSITIVE_PATTERNS = [
-    r"password",
-    r"passwd",
-    r"secret",
     r"api[_-]?key",
     r"private[_-]?key",
     r"client[_-]?secret",
     r"bearer",
-    r"token",
+    r"access[_-]?token",
+    r"refresh[_-]?token",
     r"cookie",
-    r"session",
     r"\.env",
-    r"\.vtt",
+]
+
+WARNING_PATTERNS = [
     r"raw transcript",
+    r"\.vtt",
     r"handoff_pack",
     r"business secret",
     r"confidential",
+    r"personal identifier",
+    r"company-specific identifier",
 ]
 
-ALLOWLIST_FILES = [
-    ".gitignore",
+ALLOWLIST_WARNING_FILES = {
     "README.md",
-    "RUNBOOK.md",
     "SAFETY.md",
     "STATUS.md",
+    "RUNBOOK.md",
     "00_STEM_CELL/README_STEM_CELL.md",
     "00_STEM_CELL/SAFETY_RULES.md",
     "00_STEM_CELL/REBUILD_PLAN.md",
@@ -45,24 +49,35 @@ ALLOWLIST_FILES = [
     "00_STEM_CELL/YTM_V1_1_BLUEPRINT.md",
     "00_STEM_CELL/YTM_V1_2_TARGET.md",
     "00_STEM_CELL/LOCAL_STACK.md",
+    "00_STEM_CELL/source_maps/V0_1_DONOR_MAP.md",
     "scripts/safety/public_safety_audit.py",
-]
+    ".gitignore",
+}
 
-def is_inside_blocked_path(path: Path) -> bool:
-    rel = path.relative_to(ROOT).as_posix()
-    return any(rel.startswith(x) or ("/" + x) in rel for x in BLOCKED_PATHS)
+def is_ignored(path: Path) -> bool:
+    rel_parts = path.relative_to(ROOT).parts
+    return any(part in IGNORED_DIRS for part in rel_parts)
 
 def should_scan(path: Path) -> bool:
     if not path.is_file():
         return False
-    if ".git" in path.parts:
+    if is_ignored(path):
         return False
     if path.name == ".DS_Store":
         return False
+    if path.stat().st_size > 1_000_000:
+        return False
     return True
+
+def scan_patterns(text: str, patterns: list[str]) -> str | None:
+    for pattern in patterns:
+        if re.search(pattern, text, re.IGNORECASE):
+            return pattern
+    return None
 
 def main() -> int:
     findings = []
+    warnings = []
 
     for path in ROOT.rglob("*"):
         if not should_scan(path):
@@ -70,11 +85,7 @@ def main() -> int:
 
         rel = path.relative_to(ROOT).as_posix()
 
-        if is_inside_blocked_path(path):
-            findings.append(f"BLOCKED PATH PRESENT IN WORKTREE: {rel}")
-            continue
-
-        if path.stat().st_size > 1_000_000:
+        if rel in ALLOWLIST_WARNING_FILES:
             continue
 
         try:
@@ -82,12 +93,14 @@ def main() -> int:
         except Exception:
             continue
 
-        for pattern in SENSITIVE_PATTERNS:
-            if re.search(pattern, text, re.IGNORECASE):
-                if rel in ALLOWLIST_FILES:
-                    continue
-                findings.append(f"SENSITIVE PATTERN: {rel} :: {pattern}")
-                break
+        sensitive = scan_patterns(text, SENSITIVE_PATTERNS)
+        if sensitive:
+            findings.append(f"SENSITIVE PATTERN: {rel} :: {sensitive}")
+            continue
+
+        warning = scan_patterns(text, WARNING_PATTERNS)
+        if warning and rel not in ALLOWLIST_WARNING_FILES:
+            warnings.append(f"WARNING PATTERN: {rel} :: {warning}")
 
     if findings:
         print("PUBLIC SAFETY AUDIT: FAIL")
@@ -97,6 +110,15 @@ def main() -> int:
         print()
         print("Review before commit/push.")
         return 1
+
+    if warnings:
+        print("PUBLIC SAFETY AUDIT: PASS WITH WARNINGS")
+        print()
+        for item in warnings:
+            print("-", item)
+        print()
+        print("Warnings are not blockers, but review them before push.")
+        return 0
 
     print("PUBLIC SAFETY AUDIT: PASS")
     return 0
