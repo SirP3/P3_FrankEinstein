@@ -23,10 +23,10 @@ def create_run_folder(run_id: str) -> Path:
     info = run_path / "run-info.md"
     if not info.exists():
         info.write_text(
-            "# YTM Run Info\\n\\n"
-            + "Run ID: `" + run_id + "`\\n\\n"
-            + "Created: " + datetime.now().isoformat(timespec=\"seconds\") + "\\n\\n"
-            + "Safety: local-only runtime output. Do not commit.\\n",
+            "# YTM Run Info\n\n"
+            + "Run ID: `" + run_id + "`\n\n"
+            + "Created: " + datetime.now().isoformat(timespec="seconds") + "\n\n"
+            + "Safety: local-only runtime output. Do not commit.\n",
             encoding="utf-8",
         )
 
