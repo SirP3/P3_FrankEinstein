@@ -121,6 +121,13 @@ if selected_run:
 if st.session_state.upload_output:
     st.code(st.session_state.upload_output)
 
+st.subheader("Derived placeholder")
+if selected_run:
+    if st.button("Build derived placeholder"):
+        st.session_state.derived_output = run_command(["python3", "apps/youtube_mining/scripts/build_derived_placeholder.py", selected_run])
+    if "derived_output" in st.session_state and st.session_state.derived_output:
+        st.code(st.session_state.derived_output)
+
 st.subheader("Workspace dashboard")
 if st.button("Run workspace dashboard"):
     st.session_state.workspace_dashboard_output = run_command(["python3", "scripts/status_dashboard.py"])
