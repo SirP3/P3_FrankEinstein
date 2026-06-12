@@ -53,6 +53,7 @@ ALLOWLIST_WARNING_FILES = {
     "00_STEM_CELL/rebuild/YTM_CODE_INSPECTION_DECISION.md",
     "apps/youtube_mining/README.md",
     "apps/youtube_mining/docs/OUTPUT_POLICY.md",
+    "apps/youtube_mining/docs/LOCAL_RUNTIME_BOUNDARY.md",
     "scripts/safety/public_safety_audit.py",
     ".gitignore",
 }
