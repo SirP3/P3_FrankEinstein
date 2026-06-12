@@ -1,0 +1,28 @@
+# Local/private zones - never commit
+private/
+output/
+quarantine/
+.local-private/
+
+# Donor/import quarantine - never commit until manually audited
+donor/
+
+# Secrets
+.env
+.env.*
+*.secret.*
+*.credentials.*
+*.private.*
+*.local.md
+
+# Raw/source mining outputs
+transcripts/
+**/transcripts/
+*.vtt
+*.txt
+
+# System/cache
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
