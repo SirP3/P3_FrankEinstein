@@ -44,8 +44,14 @@ with col1:
 
 with col2:
     st.subheader("Safety status")
+    if "safety_audit_output" not in st.session_state:
+        st.session_state.safety_audit_output = ""
+
     if st.button("Run safety audit"):
-        st.code(run_command(["python3", "scripts/safety/public_safety_audit.py"]))
+        st.session_state.safety_audit_output = run_command(["python3", "scripts/safety/public_safety_audit.py"]))
+
+    if st.session_state.safety_audit_output:
+        st.code(st.session_state.safety_audit_output)
 
 st.subheader("Local YTM runs")
 
@@ -61,10 +67,15 @@ st.subheader("Create local run folder")
 
 run_id = st.text_input("Run ID", value="ui-smoke-test-001")
 
+if "create_run_output" not in st.session_state:
+    st.session_state.create_run_output = ""
+
 if st.button("Create run folder"):
-    output = run_command(["python3", "apps/youtube_mining/scripts/create_run_folder.py", run_id])
-    st.code(output)
+    st.session_state.create_run_output = run_command(["python3", "apps/youtube_mining/scripts/create_run_folder.py", run_id])
     st.rerun()
+
+if st.session_state.create_run_output:
+    st.code(st.session_state.create_run_output)
 
 st.subheader("Current limitations")
 
