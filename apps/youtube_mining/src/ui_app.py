@@ -3,6 +3,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+from apps.youtube_mining.scripts.source_status import source_files
+
 try:
     import streamlit as st
 except Exception:
@@ -58,8 +60,20 @@ st.subheader("Local YTM runs")
 runs = list_runs()
 if runs:
     st.write("Run count:", len(runs))
-    for run in runs:
-        st.write("-", run)
+
+    selected_run = st.selectbox("Selected run", runs, index=len(runs) - 1)
+    files = source_files(selected_run)
+
+    st.write("Selected run:", selected_run)
+    st.write("Source file count:", len(files))
+
+    if files:
+        st.write("Source files:")
+        for file in files:
+            rel = file.relative_to(OUTPUT_ROOT / selected_run)
+            st.write("-", str(rel))
+    else:
+        st.write("No source files found for selected run.")
 else:
     st.write("No local runs found.")
 
