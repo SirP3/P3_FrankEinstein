@@ -1,0 +1,42 @@
+# YTM runtime paths template
+# Public-safe template only.
+# Copy to a local-only config if machine-specific changes are needed.
+
+version: "0.2-template"
+
+app:
+  name: "youtube_mining"
+  role: "local YouTube source adapter"
+
+paths:
+  # Runtime outputs must stay outside committed app code.
+  runtime_output_root: "output/youtube_mining"
+
+  # Future per-run structure:
+  run_structure:
+    source: "source"
+    derived: "derived"
+    handoffs: "handoffs"
+    archive: "archive"
+    run_info: "run-info.md"
+
+safety:
+  commit_safe_app_path: "apps/youtube_mining"
+  local_only_output_path: "output/youtube_mining"
+
+  local_only_material:
+    - "source files"
+    - "derived model outputs"
+    - "handoff packs"
+    - "run logs"
+    - "private local config"
+
+  committed_material:
+    - "source code"
+    - "generic config templates"
+    - "public-safe docs"
+    - "tests without private data"
+
+operator:
+  default_status: "skeleton"
+  current_rule: "no runtime output inside committed app paths"
