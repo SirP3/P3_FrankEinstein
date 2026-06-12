@@ -48,7 +48,7 @@ with col2:
         st.session_state.safety_audit_output = ""
 
     if st.button("Run safety audit"):
-        st.session_state.safety_audit_output = run_command(["python3", "scripts/safety/public_safety_audit.py"]))
+        st.session_state.safety_audit_output = run_command(["python3", "scripts/safety/public_safety_audit.py"])
 
     if st.session_state.safety_audit_output:
         st.code(st.session_state.safety_audit_output)
