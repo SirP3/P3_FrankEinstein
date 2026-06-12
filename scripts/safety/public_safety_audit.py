@@ -54,6 +54,7 @@ ALLOWLIST_WARNING_FILES = {
     "apps/youtube_mining/README.md",
     "apps/youtube_mining/docs/OUTPUT_POLICY.md",
     "apps/youtube_mining/docs/LOCAL_RUNTIME_BOUNDARY.md",
+    "apps/youtube_mining/scripts/source_status.py",
     "scripts/safety/public_safety_audit.py",
     ".gitignore",
 }
