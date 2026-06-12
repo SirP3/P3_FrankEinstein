@@ -26,3 +26,6 @@ transcripts/
 __pycache__/
 *.pyc
 .venv/
+
+# Allow public-safe Python dependency list
+!requirements.txt
