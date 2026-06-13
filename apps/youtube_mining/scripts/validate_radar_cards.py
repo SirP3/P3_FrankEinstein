@@ -39,16 +39,49 @@ CONTROLLED_VALUES = {
 }
 
 POLICY_CONTEXT_TERMS = ("policy", "validation", "guardrail", "checklist", "note")
+FIELD_PATTERN = re.compile(r"^\s*(?:[-*]\s*)?([a-z_]+)\s*:\s*(.*)$")
+ANSI_PATTERN = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+
+
+def clean_terminal_control(text: str) -> str:
+    text = ANSI_PATTERN.sub("", text)
+    text = text.replace("\r", "\n")
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
+    return text
 
 
 def field_values(text: str) -> dict[str, str]:
     values = {}
+    current_field = ""
+    parts = []
+
+    def flush_current() -> None:
+        if current_field:
+            values[current_field] = "\n".join(parts).strip()
+
     for line in text.splitlines():
-        for field in REQUIRED_FIELDS:
-            prefix = field + ":"
-            if line.lower().startswith(prefix):
-                values[field] = line.split(":", 1)[1].strip()
+        match = FIELD_PATTERN.match(line)
+        field = match.group(1).lower() if match else ""
+
+        if field in REQUIRED_FIELDS:
+            flush_current()
+            current_field = field
+            parts = [match.group(2).strip()]
+            continue
+
+        if current_field:
+            parts.append(line.strip())
+
+    flush_current()
     return values
+
+
+def first_scalar(value: str) -> str:
+    for line in value.splitlines():
+        line = line.strip()
+        if line:
+            return line
+    return ""
 
 
 def clean_output_warnings(text: str) -> list[str]:
@@ -59,10 +92,7 @@ def clean_output_warnings(text: str) -> list[str]:
     if long_lines:
         warnings.append("line longer than 500 characters: " + ", ".join(str(item) for item in long_lines[:5]))
 
-    clean_summary_total = 0
-    for line in lines:
-        if line.lower().startswith("clean_summary:"):
-            clean_summary_total += len(line.split(":", 1)[1].strip())
+    clean_summary_total = len(field_values(text).get("clean_summary", ""))
     if clean_summary_total > 3000:
         warnings.append("clean_summary content longer than 3000 characters")
 
@@ -84,13 +114,13 @@ def clean_output_warnings(text: str) -> list[str]:
 
 
 def validate_card(card: Path) -> dict[str, object]:
-    text = card.read_text(encoding="utf-8", errors="ignore")
+    text = clean_terminal_control(card.read_text(encoding="utf-8", errors="ignore"))
     values = field_values(text)
     missing = [field for field in REQUIRED_FIELDS if field not in values]
     invalid = []
 
     for field, allowed in CONTROLLED_VALUES.items():
-        value = values.get(field, "").strip()
+        value = first_scalar(values.get(field, ""))
         if value and value not in allowed:
             invalid.append(field + "=" + value)
 
