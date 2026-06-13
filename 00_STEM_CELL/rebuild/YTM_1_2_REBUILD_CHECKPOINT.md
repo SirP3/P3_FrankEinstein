@@ -22,6 +22,7 @@ YouTube URL
 -> radar-card validation
 -> radar-card brief
 -> full pipeline smoke report
+-> final YTM run summary
 ```
 
 ## One-command Smoke Test
@@ -30,7 +31,22 @@ YouTube URL
 python3 apps/youtube_mining/scripts/run_ytm_pipeline_smoke.py youtube-intake-test-001 --model qwen2.5:7b --limit 1
 ```
 
-The full pipeline smoke runner is also wired into the Streamlit UI.
+The full pipeline smoke runner is also wired into the Streamlit UI and now ends with:
+
+```text
+handoffs/ytm_run_summary.md
+```
+
+The final runtime handoff chain is:
+
+```text
+operator_brief.md
+radar_card_brief.md
+ytm_pipeline_smoke_report.md
+ytm_run_summary.md
+```
+
+The smoke runner includes the YTM run summary builder as its final stage.
 
 ## Current UI Run Summary
 
@@ -43,6 +59,7 @@ The Streamlit UI has a Run summary panel showing available/missing status for ke
 - `handoffs/operator_brief.md`
 - `handoffs/radar_card_brief.md`
 - `handoffs/ytm_pipeline_smoke_report.md`
+- `handoffs/ytm_run_summary.md`
 
 The UI must not display:
 
@@ -65,8 +82,12 @@ Public Source, Private Processing, Clean Output.
 
 - Core pipeline works.
 - One-command smoke test works.
+- Local radar-card generation works.
+- Radar-card validation can pass.
+- Radar-card brief exists.
+- Final YTM run summary exists.
 - UI smoke control works.
-- Run summary panel exists.
+- UI run summary panel exists.
 - Batch/channel processing is not implemented.
 - RR / Reddit Radar is not started yet.
 
