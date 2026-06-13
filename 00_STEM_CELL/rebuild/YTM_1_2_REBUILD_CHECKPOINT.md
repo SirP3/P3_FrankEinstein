@@ -78,6 +78,26 @@ Current proven final output:
 output/youtube_mining/<run_id>/handoffs/ytm_run_summary.md
 ```
 
+The Streamlit UI now has a control for:
+
+```text
+Run full pipeline from YouTube URL
+```
+
+The UI can call:
+
+```text
+apps/youtube_mining/scripts/run_ytm_url_pipeline.py
+```
+
+This means the operator can run the URL pipeline from the UI, not only from terminal:
+
+```text
+YouTube URL + run ID
+-> full YTM pipeline
+-> final handoff: handoffs/ytm_run_summary.md
+```
+
 ## YTM Core Baseline Acceptance
 
 - Baseline name: YTM Core Baseline Accepted
@@ -123,13 +143,11 @@ Public Source, Private Processing, Clean Output.
 ## Current Status
 
 - Core pipeline works.
-- One-command smoke test works.
 - One-command URL pipeline works.
+- UI URL pipeline control exists.
+- Final YTM run summary exists.
 - Local radar-card generation works.
 - Radar-card validation can pass.
-- Radar-card brief exists.
-- Final YTM run summary exists.
-- UI smoke control works.
 - UI run summary panel exists.
 - Batch/channel processing is not implemented.
 - RR / Reddit Radar is not started yet.
