@@ -43,6 +43,9 @@ def source_files(run_id: str):
         if p.is_file() and p.suffix.lower() in ALLOWED_SOURCE_EXTENSIONS
     ])
 
+def operator_brief_path(run_id: str) -> Path:
+    return OUTPUT_ROOT / run_id / "handoffs" / "operator_brief.md"
+
 def write_uploaded_source(run_id: str, uploaded_file) -> Path:
     run_id = safe_run_id(run_id)
     name = Path(uploaded_file.name).name
@@ -134,6 +137,14 @@ if selected_run:
         st.session_state.operator_brief_output = run_command(["python3", "apps/youtube_mining/scripts/build_operator_brief_placeholder.py", selected_run])
     if st.session_state.operator_brief_output:
         st.code(st.session_state.operator_brief_output)
+
+    brief = operator_brief_path(selected_run)
+    if brief.exists():
+        st.write("Operator brief: available")
+        st.write("handoffs/operator_brief.md")
+        st.markdown(brief.read_text(encoding="utf-8", errors="ignore"))
+    else:
+        st.write("Operator brief: not available yet")
 
 st.subheader("Workspace dashboard")
 if st.button("Run workspace dashboard"):
