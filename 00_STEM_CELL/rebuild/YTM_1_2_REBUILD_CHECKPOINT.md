@@ -30,6 +30,27 @@ YouTube URL
 python3 apps/youtube_mining/scripts/run_ytm_pipeline_smoke.py youtube-intake-test-001 --model qwen2.5:7b --limit 1
 ```
 
+The full pipeline smoke runner is also wired into the Streamlit UI.
+
+## Current UI Run Summary
+
+The Streamlit UI has a Run summary panel showing available/missing status for key runtime outputs:
+
+- `derived/source_inventory.md`
+- `derived/transcript_index.md`
+- `derived/model_input_manifest.md`
+- `derived/radar_cards/radar-card-validation-report.md`
+- `handoffs/operator_brief.md`
+- `handoffs/radar_card_brief.md`
+- `handoffs/ytm_pipeline_smoke_report.md`
+
+The UI must not display:
+
+- raw transcript content
+- cleaned TXT transcript content
+- model packet content
+- full radar-card content
+
 ## Safety Policy
 
 Public Source, Private Processing, Clean Output.
@@ -44,8 +65,8 @@ Public Source, Private Processing, Clean Output.
 
 - Core pipeline works.
 - One-command smoke test works.
-- Radar-card validation can reach pass.
-- UI is not fully wired for the whole pipeline yet.
+- UI smoke control works.
+- Run summary panel exists.
 - Batch/channel processing is not implemented.
 - RR / Reddit Radar is not started yet.
 
