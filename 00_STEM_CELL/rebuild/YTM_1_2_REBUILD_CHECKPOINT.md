@@ -78,6 +78,18 @@ Current proven final output:
 output/youtube_mining/<run_id>/handoffs/ytm_run_summary.md
 ```
 
+## YTM Core Baseline Acceptance
+
+- Baseline name: YTM Core Baseline Accepted
+- Acceptance run: `ytm-acceptance-001`
+- Acceptance result: pass
+- HEAD at acceptance: `9a53ea4 Update YTM checkpoint with URL pipeline`
+- Final output: `output/youtube_mining/ytm-acceptance-001/handoffs/ytm_run_summary.md`
+- Git status: clean
+- Meaning: one-command URL pipeline can process a YouTube URL into a final runtime-only YTM run summary.
+- Policy confirmation: runtime outputs stay under `output/youtube_mining/`.
+- Limitation: this is a core pipeline baseline, not full production UI, not batch/channel processing, not RR/Reddit Radar.
+
 ## Current UI Run Summary
 
 The Streamlit UI has a Run summary panel showing available/missing status for key runtime outputs:
