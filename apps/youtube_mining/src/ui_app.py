@@ -49,6 +49,32 @@ def operator_brief_path(run_id: str) -> Path:
 def pipeline_smoke_report_path(run_id: str) -> Path:
     return OUTPUT_ROOT / run_id / "handoffs" / "ytm_pipeline_smoke_report.md"
 
+def run_summary_files(run_id: str) -> list[tuple[str, Path]]:
+    run_dir = OUTPUT_ROOT / run_id
+    relative_paths = [
+        "derived/source_inventory.md",
+        "derived/transcript_index.md",
+        "derived/model_input_manifest.md",
+        "derived/radar_cards/radar-card-validation-report.md",
+        "handoffs/operator_brief.md",
+        "handoffs/radar_card_brief.md",
+        "handoffs/ytm_pipeline_smoke_report.md",
+    ]
+    return [(relative_path, run_dir / relative_path) for relative_path in relative_paths]
+
+def validation_counts(run_id: str) -> dict[str, str]:
+    report = OUTPUT_ROOT / run_id / "derived" / "radar_cards" / "radar-card-validation-report.md"
+    labels = ["Radar-card count", "Passed count", "Warning count", "Failed count"]
+    counts = {}
+    if not report.exists():
+        return counts
+    for line in report.read_text(encoding="utf-8", errors="ignore").splitlines():
+        for label in labels:
+            prefix = label + ":"
+            if line.startswith(prefix):
+                counts[label] = line[len(prefix):].strip()
+    return counts
+
 def write_uploaded_source(run_id: str, uploaded_file) -> Path:
     run_id = safe_run_id(run_id)
     name = Path(uploaded_file.name).name
@@ -94,6 +120,22 @@ if runs:
 else:
     st.write("No local runs found.")
     selected_run = ""
+
+if selected_run:
+    st.subheader("Run summary")
+    st.table([
+        {"path": relative_path, "status": "available" if path.exists() else "missing"}
+        for relative_path, path in run_summary_files(selected_run)
+    ])
+    counts = validation_counts(selected_run)
+    if counts:
+        st.write(
+            "Radar-card validation:",
+            "count " + counts.get("Radar-card count", "not available"),
+            "| passed " + counts.get("Passed count", "not available"),
+            "| warnings " + counts.get("Warning count", "not available"),
+            "| failed " + counts.get("Failed count", "not available"),
+        )
 
 st.subheader("Create local run folder")
 run_id = st.text_input("Run ID", value="ui-smoke-test-001")
