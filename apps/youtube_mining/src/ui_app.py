@@ -58,7 +58,7 @@ def write_uploaded_source(run_id: str, uploaded_file) -> Path:
     target.write_bytes(uploaded_file.getbuffer())
     return target
 
-for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_output", "upload_output", "operator_brief_output"]:
+for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_output", "upload_output", "youtube_intake_output", "operator_brief_output"]:
     if key not in st.session_state:
         st.session_state[key] = ""
 
@@ -123,6 +123,24 @@ if selected_run:
             st.session_state.upload_output = "ERROR " + str(exc)
 if st.session_state.upload_output:
     st.code(st.session_state.upload_output)
+
+st.subheader("YouTube source intake")
+if selected_run:
+    youtube_input = st.text_input("YouTube URL or video ID")
+    if st.button("Add YouTube source"):
+        if youtube_input.strip():
+            st.session_state.youtube_intake_output = run_command([
+                "python3",
+                "apps/youtube_mining/scripts/intake_youtube_source.py",
+                selected_run,
+                "--url",
+                youtube_input.strip(),
+            ])
+            st.rerun()
+        else:
+            st.session_state.youtube_intake_output = "ERROR YouTube URL or video ID is required."
+if st.session_state.youtube_intake_output:
+    st.code(st.session_state.youtube_intake_output)
 
 st.subheader("Derived placeholder")
 if selected_run:
