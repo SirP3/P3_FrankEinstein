@@ -5,10 +5,14 @@ from datetime import datetime, timezone
 import re
 import shutil
 import subprocess
+import textwrap
 
 ROOT = Path(__file__).resolve().parents[3]
 OUTPUT_ROOT = ROOT / "output" / "youtube_mining"
 PROMPT_TEMPLATE = ROOT / "apps" / "youtube_mining" / "prompts" / "ytm_radar_card_prompt_v0_2.md"
+ANSI_ESCAPE_PATTERN = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+OSC_ESCAPE_PATTERN = re.compile(r"\x1b\][^\x07]*(?:\x07|\x1b\\)")
+SPINNER_CHARS = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 
 
 def safe_output_name(packet: Path) -> str:
@@ -32,6 +36,80 @@ def build_model_input(prompt_template: Path, packet: Path) -> str:
         + "\n\n---\n\n# Local Model Packet\n\n"
         + packet.read_text(encoding="utf-8", errors="ignore")
     )
+
+
+def strip_terminal_noise(text: str) -> str:
+    text = text.replace("\r\n", "\n")
+    text = re.sub(r"[^\n]*\r", "", text)
+    text = text.replace("\r", "")
+    text = OSC_ESCAPE_PATTERN.sub("", text)
+    text = ANSI_ESCAPE_PATTERN.sub("", text)
+    text = re.sub("[" + re.escape(SPINNER_CHARS) + "]", "", text)
+    return "".join(ch for ch in text if ch == "\n" or ch == "\t" or ord(ch) >= 32)
+
+
+def limit_blank_lines(lines: list[str], max_blank_lines: int = 2) -> list[str]:
+    cleaned = []
+    blank_count = 0
+    for line in lines:
+        if line.strip():
+            blank_count = 0
+            cleaned.append(line.rstrip())
+            continue
+        blank_count += 1
+        if blank_count <= max_blank_lines:
+            cleaned.append("")
+    return cleaned
+
+
+def wrap_markdown_lines(lines: list[str], width: int = 110) -> list[str]:
+    wrapped = []
+    in_code_block = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_code_block = not in_code_block
+            wrapped.append(line)
+            continue
+        if in_code_block or len(line) <= width or not stripped or stripped.startswith("|"):
+            wrapped.append(line)
+            continue
+
+        bullet_match = re.match(r"^(\s*[-*]\s+)(.+)$", line)
+        if bullet_match:
+            prefix, value = bullet_match.groups()
+            wrapped.extend(
+                textwrap.wrap(
+                    value,
+                    width=width,
+                    initial_indent=prefix,
+                    subsequent_indent=" " * len(prefix),
+                    break_long_words=False,
+                    break_on_hyphens=False,
+                )
+            )
+            continue
+
+        wrapped.extend(
+            textwrap.wrap(
+                line,
+                width=width,
+                break_long_words=False,
+                break_on_hyphens=False,
+            )
+        )
+    return wrapped
+
+
+def clean_model_output(text: str) -> str:
+    text = strip_terminal_noise(text)
+    heading_index = text.find("# YTM Radar Card")
+    if heading_index >= 0:
+        text = text[heading_index:]
+
+    lines = limit_blank_lines(text.split("\n"))
+    lines = wrap_markdown_lines(lines)
+    return "\n".join(lines).strip() + "\n"
 
 
 def write_run_log(
@@ -148,7 +226,7 @@ def main() -> None:
         model_input = build_model_input(PROMPT_TEMPLATE, packet)
         output = run_model(args.model, model_input)
         target = output_dir / safe_output_name(packet)
-        target.write_text(output, encoding="utf-8")
+        target.write_text(clean_model_output(output), encoding="utf-8")
         written.append(target)
 
     log_path = write_run_log(
