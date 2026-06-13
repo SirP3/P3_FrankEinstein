@@ -48,6 +48,36 @@ ytm_run_summary.md
 
 The smoke runner includes the YTM run summary builder as its final stage.
 
+## One-command URL Pipeline
+
+The URL pipeline runner exists:
+
+```text
+apps/youtube_mining/scripts/run_ytm_url_pipeline.py
+```
+
+It can run the full YTM chain from a YouTube URL/video ID and run ID:
+
+```text
+YouTube URL + run_id
+-> create run folder if missing
+-> source intake
+-> full pipeline smoke
+-> final ytm_run_summary.md
+```
+
+Example:
+
+```bash
+python3 apps/youtube_mining/scripts/run_ytm_url_pipeline.py youtube-url-pipeline-test-001 --url "https://www.youtube.com/watch?v=tBOEhYs8vSQ" --model qwen2.5:7b --limit 1
+```
+
+Current proven final output:
+
+```text
+output/youtube_mining/<run_id>/handoffs/ytm_run_summary.md
+```
+
 ## Current UI Run Summary
 
 The Streamlit UI has a Run summary panel showing available/missing status for key runtime outputs:
@@ -82,6 +112,7 @@ Public Source, Private Processing, Clean Output.
 
 - Core pipeline works.
 - One-command smoke test works.
+- One-command URL pipeline works.
 - Local radar-card generation works.
 - Radar-card validation can pass.
 - Radar-card brief exists.
