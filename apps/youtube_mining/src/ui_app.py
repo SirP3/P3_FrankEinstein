@@ -92,17 +92,6 @@ else:
     st.write("No local runs found.")
     selected_run = ""
 
-if selected_run:
-    st.subheader("Source status")
-    files = source_files(selected_run)
-    st.write("Selected run:", selected_run)
-    st.write("Source file count:", len(files))
-    if files:
-        for file in files:
-            st.write("-", file.relative_to(OUTPUT_ROOT / selected_run))
-    else:
-        st.write("No source files in this run yet.")
-
 st.subheader("Create local run folder")
 run_id = st.text_input("Run ID", value="ui-smoke-test-001")
 if st.button("Create run folder"):
@@ -110,19 +99,6 @@ if st.button("Create run folder"):
     st.rerun()
 if st.session_state.create_run_output:
     st.code(st.session_state.create_run_output)
-
-st.subheader("Manual source intake")
-if selected_run:
-    uploaded = st.file_uploader("Add one local-only source file to selected run", type=["md", "txt", "vtt", "srt", "json"])
-    if uploaded is not None and st.button("Save uploaded source to selected run"):
-        try:
-            target = write_uploaded_source(selected_run, uploaded)
-            st.session_state.upload_output = "SAVED " + str(target)
-            st.rerun()
-        except Exception as exc:
-            st.session_state.upload_output = "ERROR " + str(exc)
-if st.session_state.upload_output:
-    st.code(st.session_state.upload_output)
 
 st.subheader("YouTube source intake")
 if selected_run:
@@ -141,6 +117,30 @@ if selected_run:
             st.session_state.youtube_intake_output = "ERROR YouTube URL or video ID is required."
 if st.session_state.youtube_intake_output:
     st.code(st.session_state.youtube_intake_output)
+
+st.subheader("Manual source intake")
+if selected_run:
+    uploaded = st.file_uploader("Add one local-only source file to selected run", type=["md", "txt", "vtt", "srt", "json"])
+    if uploaded is not None and st.button("Save uploaded source to selected run"):
+        try:
+            target = write_uploaded_source(selected_run, uploaded)
+            st.session_state.upload_output = "SAVED " + str(target)
+            st.rerun()
+        except Exception as exc:
+            st.session_state.upload_output = "ERROR " + str(exc)
+if st.session_state.upload_output:
+    st.code(st.session_state.upload_output)
+
+if selected_run:
+    st.subheader("Source status")
+    files = source_files(selected_run)
+    st.write("Selected run:", selected_run)
+    st.write("Source file count:", len(files))
+    if files:
+        for file in files:
+            st.write("-", file.relative_to(OUTPUT_ROOT / selected_run))
+    else:
+        st.write("No source files in this run yet.")
 
 st.subheader("Derived placeholder")
 if selected_run:
