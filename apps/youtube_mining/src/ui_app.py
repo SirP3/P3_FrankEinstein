@@ -46,6 +46,9 @@ def source_files(run_id: str):
 def operator_brief_path(run_id: str) -> Path:
     return OUTPUT_ROOT / run_id / "handoffs" / "operator_brief.md"
 
+def pipeline_smoke_report_path(run_id: str) -> Path:
+    return OUTPUT_ROOT / run_id / "handoffs" / "ytm_pipeline_smoke_report.md"
+
 def write_uploaded_source(run_id: str, uploaded_file) -> Path:
     run_id = safe_run_id(run_id)
     name = Path(uploaded_file.name).name
@@ -58,7 +61,7 @@ def write_uploaded_source(run_id: str, uploaded_file) -> Path:
     target.write_bytes(uploaded_file.getbuffer())
     return target
 
-for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_output", "upload_output", "youtube_intake_output", "operator_brief_output"]:
+for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_output", "upload_output", "youtube_intake_output", "operator_brief_output", "pipeline_smoke_output"]:
     if key not in st.session_state:
         st.session_state[key] = ""
 
@@ -163,6 +166,35 @@ if selected_run:
         st.markdown(brief.read_text(encoding="utf-8", errors="ignore"))
     else:
         st.write("Operator brief: not available yet")
+
+st.subheader("Full pipeline smoke test")
+if selected_run:
+    smoke_model = st.text_input("Smoke model", value="qwen2.5:7b")
+    smoke_limit = st.number_input("Smoke limit", min_value=1, value=1, step=1)
+    smoke_skip_model = st.checkbox("Skip model", value=False)
+    if st.button("Run full pipeline smoke"):
+        command = [
+            "python3",
+            "apps/youtube_mining/scripts/run_ytm_pipeline_smoke.py",
+            selected_run,
+            "--model",
+            smoke_model.strip() or "qwen2.5:7b",
+            "--limit",
+            str(int(smoke_limit)),
+        ]
+        if smoke_skip_model:
+            command.append("--skip-model")
+        st.session_state.pipeline_smoke_output = run_command(command)
+
+    if st.session_state.pipeline_smoke_output:
+        st.code(st.session_state.pipeline_smoke_output)
+
+    smoke_report = pipeline_smoke_report_path(selected_run)
+    if smoke_report.exists():
+        st.write("Pipeline smoke report: available")
+        st.write("handoffs/ytm_pipeline_smoke_report.md")
+    else:
+        st.write("Pipeline smoke report: not available yet")
 
 st.subheader("Workspace dashboard")
 if st.button("Run workspace dashboard"):
