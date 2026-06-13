@@ -23,6 +23,12 @@ def run_command(args):
     )
     return result.stdout.strip()
 
+def concise_output(value: str, max_chars: int = 1600) -> str:
+    value = value.strip()
+    if len(value) <= max_chars:
+        return value
+    return "... trimmed ...\n" + value[-max_chars:].strip()
+
 def safe_run_id(value: str) -> str:
     value = value.strip().lower()
     value = re.sub(r"[^a-z0-9._-]+", "-", value)
@@ -91,7 +97,7 @@ def write_uploaded_source(run_id: str, uploaded_file) -> Path:
     target.write_bytes(uploaded_file.getbuffer())
     return target
 
-for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_output", "upload_output", "youtube_intake_output", "operator_brief_output", "pipeline_smoke_output", "url_pipeline_output"]:
+for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_output", "upload_output", "youtube_intake_output", "operator_brief_output", "pipeline_smoke_output", "url_pipeline_output", "operator_mode_output"]:
     if key not in st.session_state:
         st.session_state[key] = ""
 
@@ -114,6 +120,41 @@ with col2:
         st.session_state.safety_audit_output = run_command(["python3", "scripts/safety/public_safety_audit.py"])
     if st.session_state.safety_audit_output:
         st.code(st.session_state.safety_audit_output)
+
+st.subheader("YTM Operator Mode")
+operator_run_id = st.text_input("Operator run ID", value="ytm-operator-001")
+operator_url = st.text_input("Operator YouTube URL or video ID")
+operator_model = st.text_input("Operator model", value="qwen2.5:7b")
+operator_limit = st.number_input("Operator limit", min_value=1, value=1, step=1)
+operator_skip_model = st.checkbox("Operator skip model", value=False)
+if st.button("Run YTM pipeline"):
+    if operator_url.strip():
+        command = [
+            "python3",
+            "apps/youtube_mining/scripts/run_ytm_url_pipeline.py",
+            operator_run_id,
+            "--url",
+            operator_url.strip(),
+            "--model",
+            operator_model.strip() or "qwen2.5:7b",
+            "--limit",
+            str(int(operator_limit)),
+        ]
+        if operator_skip_model:
+            command.append("--skip-model")
+        st.session_state.operator_mode_output = concise_output(run_command(command))
+    else:
+        st.session_state.operator_mode_output = "ERROR YouTube URL or video ID is required."
+
+if st.session_state.operator_mode_output:
+    st.code(st.session_state.operator_mode_output)
+
+operator_summary = ytm_run_summary_path(safe_run_id(operator_run_id))
+if operator_summary.exists():
+    st.write("YTM run summary: available")
+    st.write("handoffs/ytm_run_summary.md")
+else:
+    st.write("YTM run summary: not available yet")
 
 st.subheader("Local YTM runs")
 
