@@ -171,6 +171,13 @@ def main() -> None:
             print("Report path:", report)
             raise SystemExit(1)
 
+    if not run_required_stage(stages, "build YTM run summary", "build_ytm_run_summary.py", [args.run_id]):
+        final_status = "fail"
+        report = write_report(args.run_id, args.model, args.skip_model, stages, final_status)
+        print_summary(stages)
+        print("Report path:", report)
+        raise SystemExit(1)
+
     report = write_report(args.run_id, args.model, args.skip_model, stages, final_status)
     print_summary(stages)
     print("Final status:", final_status)

@@ -59,6 +59,7 @@ def run_summary_files(run_id: str) -> list[tuple[str, Path]]:
         "handoffs/operator_brief.md",
         "handoffs/radar_card_brief.md",
         "handoffs/ytm_pipeline_smoke_report.md",
+        "handoffs/ytm_run_summary.md",
     ]
     return [(relative_path, run_dir / relative_path) for relative_path in relative_paths]
 
