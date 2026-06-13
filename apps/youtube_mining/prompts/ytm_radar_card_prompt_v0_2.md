@@ -12,7 +12,7 @@ Public Source, Private Processing, Clean Output
 
 Rules:
 - Public/free source may be processed privately.
-- Raw transcript text must not be reproduced.
+- Source transcript text must not be reproduced.
 - Do not output long quotes.
 - Do not write a rewritten third-party article, video, or script.
 - Do not produce plagiarism-style output.
@@ -114,7 +114,7 @@ finance_trading_quarantine:
 - No long quote.
 - No transcript reproduction.
 - No rewritten third-party content.
-- No raw personal data.
+- No unprocessed personal data.
 - `clean_summary` is own wording.
 - Quarantine flag checked.
 - Uncertainty marked.

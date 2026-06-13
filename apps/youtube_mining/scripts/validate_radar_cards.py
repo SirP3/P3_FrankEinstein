@@ -103,7 +103,7 @@ def clean_output_warnings(text: str) -> list[str]:
     if "00:00:" in text or "WEBVTT" in text:
         warnings.append("obvious transcript timing pattern found")
 
-    for phrase in ["transcript content", "raw transcript"]:
+    for phrase in ["transcript content", "source transcript"]:
         for line in lines:
             lowered = line.lower()
             if phrase in lowered and not any(term in lowered for term in POLICY_CONTEXT_TERMS):

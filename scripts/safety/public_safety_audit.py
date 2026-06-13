@@ -58,6 +58,7 @@ ALLOWLIST_WARNING_FILES = {
     "apps/youtube_mining/scripts/source_status.py",
     "apps/youtube_mining/scripts/add_source_file.py",
     "apps/youtube_mining/scripts/build_derived_placeholder.py",
+    "apps/youtube_mining/scripts/convert_vtt_to_txt.py",
     "apps/youtube_mining/src/ui_app.py",
     "scripts/safety/public_safety_audit.py",
     ".gitignore",

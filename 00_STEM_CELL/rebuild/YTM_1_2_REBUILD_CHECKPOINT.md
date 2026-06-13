@@ -125,7 +125,7 @@ The Streamlit UI has a Run summary panel showing available/missing status for ke
 
 The UI must not display:
 
-- raw transcript content
+- source transcript content
 - cleaned TXT transcript content
 - model packet content
 - full radar-card content
@@ -134,7 +134,7 @@ The UI must not display:
 
 Public Source, Private Processing, Clean Output.
 
-- Raw transcripts stay local-only.
+- Source transcripts stay local-only.
 - Cleaned TXT transcripts stay local-only.
 - Model packets stay local-only.
 - Radar-card outputs stay local-only.
