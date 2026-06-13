@@ -49,6 +49,9 @@ def operator_brief_path(run_id: str) -> Path:
 def pipeline_smoke_report_path(run_id: str) -> Path:
     return OUTPUT_ROOT / run_id / "handoffs" / "ytm_pipeline_smoke_report.md"
 
+def ytm_run_summary_path(run_id: str) -> Path:
+    return OUTPUT_ROOT / run_id / "handoffs" / "ytm_run_summary.md"
+
 def run_summary_files(run_id: str) -> list[tuple[str, Path]]:
     run_dir = OUTPUT_ROOT / run_id
     relative_paths = [
@@ -88,7 +91,7 @@ def write_uploaded_source(run_id: str, uploaded_file) -> Path:
     target.write_bytes(uploaded_file.getbuffer())
     return target
 
-for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_output", "upload_output", "youtube_intake_output", "operator_brief_output", "pipeline_smoke_output"]:
+for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_output", "upload_output", "youtube_intake_output", "operator_brief_output", "pipeline_smoke_output", "url_pipeline_output"]:
     if key not in st.session_state:
         st.session_state[key] = ""
 
@@ -137,6 +140,41 @@ if selected_run:
             "| warnings " + counts.get("Warning count", "not available"),
             "| failed " + counts.get("Failed count", "not available"),
         )
+
+st.subheader("Run full pipeline from YouTube URL")
+url_pipeline_run_id = st.text_input("URL pipeline run ID", value="ytm-ui-url-test-001")
+url_pipeline_input = st.text_input("URL pipeline YouTube URL or video ID")
+url_pipeline_model = st.text_input("URL pipeline model", value="qwen2.5:7b")
+url_pipeline_limit = st.number_input("URL pipeline limit", min_value=1, value=1, step=1)
+url_pipeline_skip_model = st.checkbox("URL pipeline skip model", value=False)
+if st.button("Run URL pipeline"):
+    if url_pipeline_input.strip():
+        command = [
+            "python3",
+            "apps/youtube_mining/scripts/run_ytm_url_pipeline.py",
+            url_pipeline_run_id,
+            "--url",
+            url_pipeline_input.strip(),
+            "--model",
+            url_pipeline_model.strip() or "qwen2.5:7b",
+            "--limit",
+            str(int(url_pipeline_limit)),
+        ]
+        if url_pipeline_skip_model:
+            command.append("--skip-model")
+        st.session_state.url_pipeline_output = run_command(command)
+    else:
+        st.session_state.url_pipeline_output = "ERROR YouTube URL or video ID is required."
+
+if st.session_state.url_pipeline_output:
+    st.code(st.session_state.url_pipeline_output)
+
+url_pipeline_summary = ytm_run_summary_path(safe_run_id(url_pipeline_run_id))
+if url_pipeline_summary.exists():
+    st.write("YTM run summary: available")
+    st.write("handoffs/ytm_run_summary.md")
+else:
+    st.write("YTM run summary: not available yet")
 
 st.subheader("Create local run folder")
 run_id = st.text_input("Run ID", value="ui-smoke-test-001")
