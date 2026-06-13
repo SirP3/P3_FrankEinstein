@@ -98,6 +98,13 @@ YouTube URL + run ID
 -> final handoff: handoffs/ytm_run_summary.md
 ```
 
+The Streamlit UI also includes a compact `YTM Operator Mode` panel.
+
+- It can run the existing URL pipeline from a Run ID plus YouTube URL/video ID.
+- It shows only safe status/path output for the final run summary.
+- It does not display source transcript content, cleaned TXT content, model packet content, or full radar-card content.
+- This moves the current YTM baseline from developer-script workflow toward operator-usable workflow.
+
 ## YTM Core Baseline Acceptance
 
 - Baseline name: YTM Core Baseline Accepted
@@ -145,10 +152,13 @@ Public Source, Private Processing, Clean Output.
 - Core pipeline works.
 - One-command URL pipeline works.
 - UI URL pipeline control exists.
+- UI Operator Mode exists.
 - Final YTM run summary exists.
 - Local radar-card generation works.
 - Radar-card validation can pass.
 - UI run summary panel exists.
+- Public GitHub baseline exists.
+- Tag exists: `ytm-core-baseline-accepted-001`.
 - Batch/channel processing is not implemented.
 - RR / Reddit Radar is not started yet.
 
