@@ -55,7 +55,7 @@ def write_uploaded_source(run_id: str, uploaded_file) -> Path:
     target.write_bytes(uploaded_file.getbuffer())
     return target
 
-for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_output", "upload_output"]:
+for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_output", "upload_output", "operator_brief_output"]:
     if key not in st.session_state:
         st.session_state[key] = ""
 
@@ -127,6 +127,13 @@ if selected_run:
         st.session_state.derived_output = run_command(["python3", "apps/youtube_mining/scripts/build_derived_placeholder.py", selected_run])
     if "derived_output" in st.session_state and st.session_state.derived_output:
         st.code(st.session_state.derived_output)
+
+st.subheader("Operator brief placeholder")
+if selected_run:
+    if st.button("Build operator brief placeholder"):
+        st.session_state.operator_brief_output = run_command(["python3", "apps/youtube_mining/scripts/build_operator_brief_placeholder.py", selected_run])
+    if st.session_state.operator_brief_output:
+        st.code(st.session_state.operator_brief_output)
 
 st.subheader("Workspace dashboard")
 if st.button("Run workspace dashboard"):
