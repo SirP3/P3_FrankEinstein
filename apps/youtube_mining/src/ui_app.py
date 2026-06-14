@@ -13,6 +13,161 @@ ROOT = Path(__file__).resolve().parents[3]
 OUTPUT_ROOT = ROOT / "output" / "youtube_mining"
 ALLOWED_SOURCE_EXTENSIONS = {".md", ".txt", ".vtt", ".srt", ".json"}
 
+UI_TEXT = {
+    "en": {
+        "title": "P3FE YouTube Mining v0.2",
+        "caption": "Safety-first local source adapter shell",
+        "intro": "Safety-first local YTM operator UI. Source/runtime content stays local-only and is not previewed as raw content.",
+        "operator_mode": "YTM Operator Mode",
+        "operator_caption": "Run one controlled YTM source intake. This is not channel-scale automation.",
+        "operator_run_id": "Operator run ID",
+        "operator_source_input": "Operator source input",
+        "single_input": "Single URL/video ID",
+        "list_file_input": "List-file path",
+        "operator_url": "Operator YouTube URL or video ID",
+        "operator_list_file": "Operator list-file path",
+        "list_file_caption": "Use a local-only text file path. File content is not previewed in the UI.",
+        "operator_model": "Operator model",
+        "operator_limit": "Operator limit",
+        "skip_model": "Skip model",
+        "limit_caption": "Limit is the processing safety cap. Keep it small while validating list-file input.",
+        "run_pipeline": "Run YTM pipeline",
+        "source_required": "ERROR source input is required.",
+        "summary_available": "YTM run summary: available",
+        "summary_missing": "YTM run summary: not available yet",
+        "resume_status": "Resume / skip-existing status",
+        "output_folder": "Output folder",
+        "output_available": "Output folder: available",
+        "open_finder": "Open output folder in Finder",
+        "output_missing": "output folder not found yet",
+        "runtime_safety": "Runtime boundary and safety",
+        "runtime_boundary": "Runtime boundary",
+        "runtime_note": "Runtime output is local-only and ignored by git.",
+        "safety_status": "Safety status",
+        "run_safety_audit": "Run safety audit",
+        "local_runs": "Local YTM runs",
+        "run_count": "Run count:",
+        "selected_run": "Selected run",
+        "no_runs": "No local runs found.",
+        "selected_run_status": "Selected run status",
+        "validation": "Radar-card validation:",
+        "legacy_url": "Legacy URL pipeline control",
+        "url_run_id": "URL pipeline run ID",
+        "url_input": "URL pipeline YouTube URL or video ID",
+        "url_model": "URL pipeline model",
+        "url_limit": "URL pipeline limit",
+        "url_skip_model": "URL pipeline skip model",
+        "run_url_pipeline": "Run URL pipeline",
+        "url_required": "ERROR YouTube URL or video ID is required.",
+        "safe_preview": "YTM safe final summary preview",
+        "manual_controls": "Optional manual controls",
+        "create_run": "Create local run folder",
+        "run_id": "Run ID",
+        "create_run_folder": "Create run folder",
+        "youtube_intake": "YouTube source intake",
+        "youtube_input": "YouTube URL or video ID",
+        "add_youtube": "Add YouTube source",
+        "manual_intake": "Manual source intake",
+        "upload_source": "Add one local-only source file to selected run",
+        "save_upload": "Save uploaded source to selected run",
+        "source_status": "Source status",
+        "source_file_count": "Source file count:",
+        "no_source_files": "No source files in this run yet.",
+        "derived_placeholder": "Derived placeholder",
+        "build_derived": "Build derived placeholder",
+        "operator_brief_placeholder": "Operator brief placeholder",
+        "build_operator_brief": "Build operator brief placeholder",
+        "operator_brief_available": "Operator brief: available",
+        "operator_brief_missing": "Operator brief: not available yet",
+        "smoke_test": "Full pipeline smoke test",
+        "smoke_model": "Smoke model",
+        "smoke_limit": "Smoke limit",
+        "run_smoke": "Run full pipeline smoke",
+        "smoke_available": "Pipeline smoke report: available",
+        "smoke_missing": "Pipeline smoke report: not available yet",
+        "workspace_dashboard": "Workspace dashboard",
+        "run_workspace_dashboard": "Run workspace dashboard",
+        "limitations": "Current limitations",
+        "limitations_text": "- Not production service\n- No channel-scale automation\n- No RR / Reddit Radar implementation yet\n- Runtime/source content stays local-only\n- Local model output is not source of truth",
+    },
+    "hu": {
+        "title": "P3FE YouTube Mining v0.2",
+        "caption": "Biztonságos, helyi forrásadapter",
+        "intro": "Biztonságos helyi YTM operátori felület. A forrás- és runtime tartalom lokális marad, nyers tartalomként nem jelenik meg.",
+        "operator_mode": "YTM Operátori mód",
+        "operator_caption": "Egy kontrollált YTM forrásfuttatás indítása. Ez nem csatornaszintű automatizálás.",
+        "operator_run_id": "Operátori run ID",
+        "operator_source_input": "Operátori forrásbemenet",
+        "single_input": "Egy URL/video ID",
+        "list_file_input": "Listafájl útvonal",
+        "operator_url": "YouTube URL vagy video ID",
+        "operator_list_file": "Listafájl helyi útvonala",
+        "list_file_caption": "Helyi, lokális listafájl útvonal. A fájl tartalmát a UI nem jeleníti meg.",
+        "operator_model": "Operátori modell",
+        "operator_limit": "Operátori limit",
+        "skip_model": "Modell kihagyása",
+        "limit_caption": "A limit a feldolgozási biztonsági sapka. Listafájl tesztnél maradjon kicsi.",
+        "run_pipeline": "YTM pipeline indítása",
+        "source_required": "HIBA: forrásbemenet szükséges.",
+        "summary_available": "YTM run summary: elérhető",
+        "summary_missing": "YTM run summary: még nem elérhető",
+        "resume_status": "Folytatás / meglévők kihagyása",
+        "output_folder": "Kimeneti mappa",
+        "output_available": "Kimeneti mappa: elérhető",
+        "open_finder": "Kimeneti mappa megnyitása Finderben",
+        "output_missing": "kimeneti mappa még nem található",
+        "runtime_safety": "Runtime határ és biztonság",
+        "runtime_boundary": "Runtime határ",
+        "runtime_note": "A runtime output lokális és git által ignorált.",
+        "safety_status": "Biztonsági státusz",
+        "run_safety_audit": "Safety audit futtatása",
+        "local_runs": "Helyi YTM futások",
+        "run_count": "Run darabszám:",
+        "selected_run": "Kiválasztott run",
+        "no_runs": "Nincs helyi run.",
+        "selected_run_status": "Kiválasztott run státusz",
+        "validation": "Radar-card validáció:",
+        "legacy_url": "Régi URL pipeline kontroll",
+        "url_run_id": "URL pipeline run ID",
+        "url_input": "URL pipeline YouTube URL vagy video ID",
+        "url_model": "URL pipeline modell",
+        "url_limit": "URL pipeline limit",
+        "url_skip_model": "URL pipeline modell kihagyása",
+        "run_url_pipeline": "URL pipeline indítása",
+        "url_required": "HIBA: YouTube URL vagy video ID szükséges.",
+        "safe_preview": "YTM biztonságos végső összefoglaló előnézet",
+        "manual_controls": "Opcionális manuális vezérlők",
+        "create_run": "Helyi run mappa létrehozása",
+        "run_id": "Run ID",
+        "create_run_folder": "Run mappa létrehozása",
+        "youtube_intake": "YouTube forrásbevitel",
+        "youtube_input": "YouTube URL vagy video ID",
+        "add_youtube": "YouTube forrás hozzáadása",
+        "manual_intake": "Manuális forrásbevitel",
+        "upload_source": "Egy lokális forrásfájl hozzáadása a kiválasztott runhoz",
+        "save_upload": "Feltöltött forrás mentése a kiválasztott runhoz",
+        "source_status": "Forrás státusz",
+        "source_file_count": "Forrásfájlok száma:",
+        "no_source_files": "Ebben a runban még nincs forrásfájl.",
+        "derived_placeholder": "Derived placeholder",
+        "build_derived": "Derived placeholder építése",
+        "operator_brief_placeholder": "Operator brief placeholder",
+        "build_operator_brief": "Operator brief placeholder építése",
+        "operator_brief_available": "Operator brief: elérhető",
+        "operator_brief_missing": "Operator brief: még nem elérhető",
+        "smoke_test": "Teljes pipeline smoke teszt",
+        "smoke_model": "Smoke modell",
+        "smoke_limit": "Smoke limit",
+        "run_smoke": "Teljes pipeline smoke futtatása",
+        "smoke_available": "Pipeline smoke report: elérhető",
+        "smoke_missing": "Pipeline smoke report: még nem elérhető",
+        "workspace_dashboard": "Workspace dashboard",
+        "run_workspace_dashboard": "Workspace dashboard futtatása",
+        "limitations": "Aktuális korlátok",
+        "limitations_text": "- Nem production service\n- Nincs csatornaszintű automatizálás\n- RR / Reddit Radar még nincs implementálva\n- Runtime/forrás tartalom lokális marad\n- A helyi modell output nem source of truth",
+    },
+}
+
 def run_command(args):
     result = subprocess.run(
         args,
@@ -162,44 +317,56 @@ for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_out
 
 st.set_page_config(page_title="P3FE YTM v0.2", layout="wide")
 
-st.title("P3FE YouTube Mining v0.2")
-st.caption("Safety-first local source adapter shell")
-st.info("Safety-first local YTM operator UI. Source/runtime content stays local-only and is not previewed as raw content.")
+language_choice = st.sidebar.selectbox("Nyelv / Language", ["Magyar", "English"], key="ui_language")
+UI_LANG = "hu" if language_choice == "Magyar" else "en"
 
-st.subheader("YTM Operator Mode")
-st.caption("Run one controlled YTM source intake. This is not channel-scale automation.")
+def tr(key: str) -> str:
+    return UI_TEXT[UI_LANG].get(key, UI_TEXT["en"].get(key, key))
+
+st.title(tr("title"))
+st.caption(tr("caption"))
+st.info(tr("intro"))
+
+st.subheader(tr("operator_mode"))
+st.caption(tr("operator_caption"))
 
 run_col, source_col = st.columns([1, 2])
 with run_col:
-    operator_run_id = st.text_input("Operator run ID", value="ytm-operator-001", key="operator_run_id")
+    operator_run_id = st.text_input(tr("operator_run_id"), value="ytm-operator-001", key="operator_run_id")
 with source_col:
-    operator_input_mode = st.radio("Operator source input", ["Single URL/video ID", "List-file path"], horizontal=True, key="operator_input_mode")
+    operator_input_mode = st.radio(
+        tr("operator_source_input"),
+        ["single", "list-file"],
+        horizontal=True,
+        format_func=lambda value: tr("single_input") if value == "single" else tr("list_file_input"),
+        key="operator_input_mode",
+    )
 
 operator_url = ""
 operator_list_file = ""
-if operator_input_mode == "Single URL/video ID":
-    operator_url = st.text_input("Operator YouTube URL or video ID", key="operator_url")
+if operator_input_mode == "single":
+    operator_url = st.text_input(tr("operator_url"), key="operator_url")
 else:
-    operator_list_file = st.text_input("Operator list-file path", key="operator_list_file")
-    st.caption("Use a local-only text file path. File content is not previewed in the UI.")
+    operator_list_file = st.text_input(tr("operator_list_file"), key="operator_list_file")
+    st.caption(tr("list_file_caption"))
 
 settings_col1, settings_col2, settings_col3 = st.columns(3)
 with settings_col1:
-    operator_model = st.text_input("Operator model", value="qwen2.5:7b", key="operator_model")
+    operator_model = st.text_input(tr("operator_model"), value="qwen2.5:7b", key="operator_model")
 with settings_col2:
-    operator_limit = st.number_input("Operator limit", min_value=1, value=1, step=1, key="operator_limit")
+    operator_limit = st.number_input(tr("operator_limit"), min_value=1, value=1, step=1, key="operator_limit")
 with settings_col3:
-    operator_skip_model = st.checkbox("Skip model", value=False, key="operator_skip_model")
-st.caption("Limit is the processing safety cap. Keep it small while validating list-file input.")
+    operator_skip_model = st.checkbox(tr("skip_model"), value=False, key="operator_skip_model")
+st.caption(tr("limit_caption"))
 
-if st.button("Run YTM pipeline", key="operator_run_pipeline"):
-    operator_source_value = operator_url.strip() if operator_input_mode == "Single URL/video ID" else operator_list_file.strip()
+if st.button(tr("run_pipeline"), key="operator_run_pipeline"):
+    operator_source_value = operator_url.strip() if operator_input_mode == "single" else operator_list_file.strip()
     if operator_source_value:
         command = [
             "python3",
             "apps/youtube_mining/scripts/run_ytm_url_pipeline.py",
             operator_run_id,
-            "--url" if operator_input_mode == "Single URL/video ID" else "--list-file",
+            "--url" if operator_input_mode == "single" else "--list-file",
             operator_source_value,
             "--model",
             operator_model.strip() or "qwen2.5:7b",
@@ -210,53 +377,53 @@ if st.button("Run YTM pipeline", key="operator_run_pipeline"):
             command.append("--skip-model")
         st.session_state.operator_mode_output = concise_output(run_command(command))
     else:
-        st.session_state.operator_mode_output = "ERROR source input is required."
+        st.session_state.operator_mode_output = tr("source_required")
 
 if st.session_state.operator_mode_output:
     st.code(st.session_state.operator_mode_output)
 
 operator_summary = ytm_run_summary_path(safe_run_id(operator_run_id))
 if operator_summary.exists():
-    st.write("YTM run summary: available")
+    st.write(tr("summary_available"))
     st.write("handoffs/ytm_run_summary.md")
 else:
-    st.write("YTM run summary: not available yet")
+    st.write(tr("summary_missing"))
 
-with st.expander("Resume / skip-existing status"):
+with st.expander(tr("resume_status")):
     st.table([{"field": key, "value": value} for key, value in operator_resume_status(operator_run_id).items()])
 
 operator_output_folder = run_output_folder(operator_run_id)
-with st.expander("Output folder"):
+with st.expander(tr("output_folder")):
     st.code(str(operator_output_folder))
     if operator_output_folder.exists():
-        st.write("Output folder: available")
-        if sys.platform == "darwin" and st.button("Open output folder in Finder", key="operator_open_output_folder"):
+        st.write(tr("output_available"))
+        if sys.platform == "darwin" and st.button(tr("open_finder"), key="operator_open_output_folder"):
             subprocess.run(["open", str(operator_output_folder)], check=False)
     else:
-        st.write("output folder not found yet")
+        st.write(tr("output_missing"))
 
-with st.expander("Runtime boundary and safety"):
-    st.subheader("Runtime boundary")
+with st.expander(tr("runtime_safety")):
+    st.subheader(tr("runtime_boundary"))
     st.code(str(OUTPUT_ROOT))
-    st.write("Runtime output is local-only and ignored by git.")
-    st.subheader("Safety status")
-    if st.button("Run safety audit", key="run_safety_audit"):
+    st.write(tr("runtime_note"))
+    st.subheader(tr("safety_status"))
+    if st.button(tr("run_safety_audit"), key="run_safety_audit"):
         st.session_state.safety_audit_output = run_command(["python3", "scripts/safety/public_safety_audit.py"])
     if st.session_state.safety_audit_output:
         st.code(st.session_state.safety_audit_output)
 
-st.subheader("Local YTM runs")
+st.subheader(tr("local_runs"))
 
 runs = list_runs()
 if runs:
-    st.write("Run count:", len(runs))
-    selected_run = st.selectbox("Selected run", runs, index=len(runs) - 1, key="selected_run")
+    st.write(tr("run_count"), len(runs))
+    selected_run = st.selectbox(tr("selected_run"), runs, index=len(runs) - 1, key="selected_run")
 else:
-    st.write("No local runs found.")
+    st.write(tr("no_runs"))
     selected_run = ""
 
 if selected_run:
-    with st.expander("Selected run status"):
+    with st.expander(tr("selected_run_status")):
         st.table([
             {"path": relative_path, "status": "available" if path.exists() else "missing"}
             for relative_path, path in run_summary_files(selected_run)
@@ -264,20 +431,20 @@ if selected_run:
         counts = validation_counts(selected_run)
         if counts:
             st.write(
-                "Radar-card validation:",
+                tr("validation"),
                 "count " + counts.get("Radar-card count", "not available"),
                 "| passed " + counts.get("Passed count", "not available"),
                 "| warnings " + counts.get("Warning count", "not available"),
                 "| failed " + counts.get("Failed count", "not available"),
             )
 
-with st.expander("Legacy URL pipeline control"):
-    url_pipeline_run_id = st.text_input("URL pipeline run ID", value="ytm-ui-url-test-001", key="url_pipeline_run_id")
-    url_pipeline_input = st.text_input("URL pipeline YouTube URL or video ID", key="url_pipeline_input")
-    url_pipeline_model = st.text_input("URL pipeline model", value="qwen2.5:7b", key="url_pipeline_model")
-    url_pipeline_limit = st.number_input("URL pipeline limit", min_value=1, value=1, step=1, key="url_pipeline_limit")
-    url_pipeline_skip_model = st.checkbox("URL pipeline skip model", value=False, key="url_pipeline_skip_model")
-    if st.button("Run URL pipeline", key="url_pipeline_run_button"):
+with st.expander(tr("legacy_url")):
+    url_pipeline_run_id = st.text_input(tr("url_run_id"), value="ytm-ui-url-test-001", key="url_pipeline_run_id")
+    url_pipeline_input = st.text_input(tr("url_input"), key="url_pipeline_input")
+    url_pipeline_model = st.text_input(tr("url_model"), value="qwen2.5:7b", key="url_pipeline_model")
+    url_pipeline_limit = st.number_input(tr("url_limit"), min_value=1, value=1, step=1, key="url_pipeline_limit")
+    url_pipeline_skip_model = st.checkbox(tr("url_skip_model"), value=False, key="url_pipeline_skip_model")
+    if st.button(tr("run_url_pipeline"), key="url_pipeline_run_button"):
         if url_pipeline_input.strip():
             command = [
                 "python3",
@@ -294,28 +461,28 @@ with st.expander("Legacy URL pipeline control"):
                 command.append("--skip-model")
             st.session_state.url_pipeline_output = run_command(command)
         else:
-            st.session_state.url_pipeline_output = "ERROR YouTube URL or video ID is required."
+            st.session_state.url_pipeline_output = tr("url_required")
 
     if st.session_state.url_pipeline_output:
         st.code(st.session_state.url_pipeline_output)
 
     url_pipeline_preview = safe_summary_preview(url_pipeline_run_id)
-    st.write("YTM safe final summary preview")
+    st.write(tr("safe_preview"))
     st.table([{"field": key, "value": value} for key, value in url_pipeline_preview.items()])
 
-with st.expander("Optional manual controls"):
-    st.subheader("Create local run folder")
-    run_id = st.text_input("Run ID", value="ui-smoke-test-001", key="manual_run_id")
-    if st.button("Create run folder", key="manual_create_run_folder"):
+with st.expander(tr("manual_controls")):
+    st.subheader(tr("create_run"))
+    run_id = st.text_input(tr("run_id"), value="ui-smoke-test-001", key="manual_run_id")
+    if st.button(tr("create_run_folder"), key="manual_create_run_folder"):
         st.session_state.create_run_output = run_command(["python3", "apps/youtube_mining/scripts/create_run_folder.py", run_id])
         st.rerun()
     if st.session_state.create_run_output:
         st.code(st.session_state.create_run_output)
 
-    st.subheader("YouTube source intake")
+    st.subheader(tr("youtube_intake"))
     if selected_run:
-        youtube_input = st.text_input("YouTube URL or video ID", key="manual_youtube_input")
-        if st.button("Add YouTube source", key="manual_add_youtube_source"):
+        youtube_input = st.text_input(tr("youtube_input"), key="manual_youtube_input")
+        if st.button(tr("add_youtube"), key="manual_add_youtube_source"):
             if youtube_input.strip():
                 st.session_state.youtube_intake_output = run_command([
                     "python3",
@@ -326,14 +493,14 @@ with st.expander("Optional manual controls"):
                 ])
                 st.rerun()
             else:
-                st.session_state.youtube_intake_output = "ERROR YouTube URL or video ID is required."
+                st.session_state.youtube_intake_output = tr("url_required")
     if st.session_state.youtube_intake_output:
         st.code(st.session_state.youtube_intake_output)
 
-    st.subheader("Manual source intake")
+    st.subheader(tr("manual_intake"))
     if selected_run:
-        uploaded = st.file_uploader("Add one local-only source file to selected run", type=["md", "txt", "vtt", "srt", "json"], key="manual_source_upload")
-        if uploaded is not None and st.button("Save uploaded source to selected run", key="manual_save_source_upload"):
+        uploaded = st.file_uploader(tr("upload_source"), type=["md", "txt", "vtt", "srt", "json"], key="manual_source_upload")
+        if uploaded is not None and st.button(tr("save_upload"), key="manual_save_source_upload"):
             try:
                 target = write_uploaded_source(selected_run, uploaded)
                 st.session_state.upload_output = "SAVED " + str(target)
@@ -344,44 +511,44 @@ with st.expander("Optional manual controls"):
         st.code(st.session_state.upload_output)
 
     if selected_run:
-        st.subheader("Source status")
+        st.subheader(tr("source_status"))
         files = source_files(selected_run)
-        st.write("Selected run:", selected_run)
-        st.write("Source file count:", len(files))
+        st.write(tr("selected_run") + ":", selected_run)
+        st.write(tr("source_file_count"), len(files))
         if files:
             for file in files:
                 st.write("-", file.relative_to(OUTPUT_ROOT / selected_run))
         else:
-            st.write("No source files in this run yet.")
+            st.write(tr("no_source_files"))
 
-    st.subheader("Derived placeholder")
+    st.subheader(tr("derived_placeholder"))
     if selected_run:
-        if st.button("Build derived placeholder", key="manual_build_derived_placeholder"):
+        if st.button(tr("build_derived"), key="manual_build_derived_placeholder"):
             st.session_state.derived_output = run_command(["python3", "apps/youtube_mining/scripts/build_derived_placeholder.py", selected_run])
         if "derived_output" in st.session_state and st.session_state.derived_output:
             st.code(st.session_state.derived_output)
 
-    st.subheader("Operator brief placeholder")
+    st.subheader(tr("operator_brief_placeholder"))
     if selected_run:
-        if st.button("Build operator brief placeholder", key="manual_build_operator_brief"):
+        if st.button(tr("build_operator_brief"), key="manual_build_operator_brief"):
             st.session_state.operator_brief_output = run_command(["python3", "apps/youtube_mining/scripts/build_operator_brief_placeholder.py", selected_run])
         if st.session_state.operator_brief_output:
             st.code(st.session_state.operator_brief_output)
 
         brief = operator_brief_path(selected_run)
         if brief.exists():
-            st.write("Operator brief: available")
+            st.write(tr("operator_brief_available"))
             st.write("handoffs/operator_brief.md")
             st.markdown(brief.read_text(encoding="utf-8", errors="ignore"))
         else:
-            st.write("Operator brief: not available yet")
+            st.write(tr("operator_brief_missing"))
 
-    st.subheader("Full pipeline smoke test")
+    st.subheader(tr("smoke_test"))
     if selected_run:
-        smoke_model = st.text_input("Smoke model", value="qwen2.5:7b", key="manual_smoke_model")
-        smoke_limit = st.number_input("Smoke limit", min_value=1, value=1, step=1, key="manual_smoke_limit")
-        smoke_skip_model = st.checkbox("Skip model", value=False, key="manual_smoke_skip_model")
-        if st.button("Run full pipeline smoke", key="manual_run_pipeline_smoke"):
+        smoke_model = st.text_input(tr("smoke_model"), value="qwen2.5:7b", key="manual_smoke_model")
+        smoke_limit = st.number_input(tr("smoke_limit"), min_value=1, value=1, step=1, key="manual_smoke_limit")
+        smoke_skip_model = st.checkbox(tr("skip_model"), value=False, key="manual_smoke_skip_model")
+        if st.button(tr("run_smoke"), key="manual_run_pipeline_smoke"):
             command = [
                 "python3",
                 "apps/youtube_mining/scripts/run_ytm_pipeline_smoke.py",
@@ -400,16 +567,16 @@ with st.expander("Optional manual controls"):
 
         smoke_report = pipeline_smoke_report_path(selected_run)
         if smoke_report.exists():
-            st.write("Pipeline smoke report: available")
+            st.write(tr("smoke_available"))
             st.write("handoffs/ytm_pipeline_smoke_report.md")
         else:
-            st.write("Pipeline smoke report: not available yet")
+            st.write(tr("smoke_missing"))
 
-    st.subheader("Workspace dashboard")
-    if st.button("Run workspace dashboard", key="manual_run_workspace_dashboard"):
+    st.subheader(tr("workspace_dashboard"))
+    if st.button(tr("run_workspace_dashboard"), key="manual_run_workspace_dashboard"):
         st.session_state.workspace_dashboard_output = run_command(["python3", "scripts/status_dashboard.py"])
     if st.session_state.workspace_dashboard_output:
         st.code(st.session_state.workspace_dashboard_output)
 
-with st.expander("Current limitations"):
-    st.markdown("- Not production service\n- No channel-scale automation\n- No RR / Reddit Radar implementation yet\n- Runtime/source content stays local-only\n- Local model output is not source of truth")
+with st.expander(tr("limitations")):
+    st.markdown(tr("limitations_text"))
