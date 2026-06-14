@@ -25,6 +25,33 @@ UI_TEXT = {
         "run_settings": "Run settings",
         "operator_actions": "Start",
         "safe_status": "Safe status",
+        "evidence_title": "Run evidence",
+        "evidence_caption": "This card shows what the machine processed, not the raw source content.",
+        "source_mode": "Source mode",
+        "source_input": "Source input",
+        "selected_videos": "Selected videos",
+        "successful_transcript": "Successful transcripts",
+        "skipped_existing": "Skipped as existing",
+        "transcript_coverage": "Transcript coverage",
+        "coverage_good": "good",
+        "coverage_none": "none",
+        "coverage_unknown": "unknown",
+        "conversion_processed": "Conversion processed",
+        "model_status": "Model status",
+        "model_skipped": "skipped",
+        "model_generated": "radar-card generated",
+        "model_failed": "failed",
+        "model_unknown": "unknown",
+        "validation_passed": "Validation passed",
+        "validation_warnings": "Validation warnings",
+        "validation_failed": "Validation failed",
+        "content_hours": "Content hours",
+        "content_hours_placeholder": "not calculated yet",
+        "handoff_summary": "Handoff / summary",
+        "final_status_label": "Final status",
+        "final_status_pass": "pass - smoke/pipeline completed",
+        "final_status_incomplete": "incomplete - expected when model was skipped or radar-card was not produced",
+        "final_status_failed": "failed - diagnostics required",
         "advanced": "Advanced / diagnostics",
         "command_output": "Command output",
         "operator_run_id": "Operator run ID",
@@ -126,6 +153,33 @@ UI_TEXT = {
         "run_settings": "Futási beállítások",
         "operator_actions": "Indítás",
         "safe_status": "Biztonságos státusz",
+        "evidence_title": "Futás bizonyíték",
+        "evidence_caption": "Ez a kártya azt mutatja, mit dolgozott fel a gép, nem a nyers forrástartalmat.",
+        "source_mode": "Forrásmód",
+        "source_input": "Forrásbemenet",
+        "selected_videos": "Kiválasztott videók",
+        "successful_transcript": "Sikeres transcript",
+        "skipped_existing": "Meglévőként kihagyva",
+        "transcript_coverage": "Transcript lefedettség",
+        "coverage_good": "jó",
+        "coverage_none": "nincs",
+        "coverage_unknown": "ismeretlen",
+        "conversion_processed": "Konverzió feldolgozva",
+        "model_status": "Modell státusz",
+        "model_skipped": "kihagyva",
+        "model_generated": "radar-card készült",
+        "model_failed": "sikertelen",
+        "model_unknown": "ismeretlen",
+        "validation_passed": "Validáció passed",
+        "validation_warnings": "Validáció warning",
+        "validation_failed": "Validáció failed",
+        "content_hours": "Tartalomóra",
+        "content_hours_placeholder": "még nincs számolva",
+        "handoff_summary": "Handoff / összefoglaló",
+        "final_status_label": "Végső státusz",
+        "final_status_pass": "pass - a smoke/pipeline lefutott",
+        "final_status_incomplete": "incomplete - ez várható, ha a modell ki volt hagyva vagy nem készült radar-card",
+        "final_status_failed": "failed - diagnosztika szükséges",
         "advanced": "Haladó / diagnosztika",
         "command_output": "Parancskimenet",
         "operator_run_id": "Operátori run ID",
@@ -315,6 +369,19 @@ def validation_counts(run_id: str) -> dict[str, str]:
                 counts[label] = line[len(prefix):].strip()
     return counts
 
+def read_stage_status(path: Path, stage_name: str) -> str:
+    if not path.exists():
+        return ""
+    for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        if not line.startswith("| ") or line.startswith("| ---"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) < 2:
+            continue
+        if cells[0] == stage_name:
+            return cells[1]
+    return ""
+
 def read_log_values(path: Path, labels: list[str]) -> dict[str, str]:
     values = {}
     if not path.exists():
@@ -348,27 +415,83 @@ def operator_resume_status(run_id: str) -> dict[str, str]:
         "final status": summary.get("Final status", "not available"),
     }
 
-def safe_summary_preview(run_id: str) -> dict[str, str]:
+def transcript_coverage_label(processed: str) -> str:
+    if processed == "not available":
+        return tr("coverage_unknown")
+    try:
+        return tr("coverage_good") if int(processed) > 0 else tr("coverage_none")
+    except ValueError:
+        return tr("coverage_unknown")
+
+def model_status_label(run_id: str) -> str:
     run_id = safe_run_id(run_id)
-    summary = ytm_run_summary_path(run_id)
+    report = pipeline_smoke_report_path(run_id)
+    status = read_stage_status(report, "run local radar-card model")
+    if status == "skipped":
+        return tr("model_skipped")
+    if status == "failed":
+        return tr("model_failed")
+
     counts = validation_counts(run_id)
-    preview = {
-        "final status": "available" if summary.exists() else "summary not found yet",
-        "transcript count": "not available",
-        "radar-card count": counts.get("Radar-card count", "not available"),
-        "passed": counts.get("Passed count", "not available"),
-        "warnings": counts.get("Warning count", "not available"),
-        "failed": counts.get("Failed count", "not available"),
-        "output path": str(summary),
-        "policy note": "Public Source, Private Processing, Clean Output — source/runtime content is not displayed in UI preview.",
+    try:
+        if int(counts.get("Radar-card count", "0") or "0") > 0:
+            return tr("model_generated")
+    except ValueError:
+        pass
+
+    return tr("model_unknown")
+
+def final_status_label(run_id: str) -> str:
+    run_id = safe_run_id(run_id)
+    summary = read_log_values(ytm_run_summary_path(run_id), ["Final status"])
+    value = summary.get("Final status", "")
+    if value == "pass":
+        return tr("final_status_pass")
+    if value == "warning" or value == "incomplete":
+        return tr("final_status_incomplete")
+    if value == "failed":
+        return tr("final_status_failed")
+    return tr("final_status_incomplete")
+
+def evidence_card_data(run_id: str) -> dict[str, str]:
+    run_id = safe_run_id(run_id)
+    run_dir = OUTPUT_ROOT / run_id
+    source_values = read_log_values(
+        run_dir / "source" / "source-intake-log.md",
+        ["Input mode", "Input value", "Selected videos"],
+    )
+    intake_values = read_log_values(
+        run_dir / "source" / "transcript-intake-log.md",
+        ["Selected video count", "Processed video count", "Skipped existing count"],
+    )
+    conversion_values = read_log_values(
+        run_dir / "derived" / "transcript-conversion-log.md",
+        ["Processed file count"],
+    )
+    counts = validation_counts(run_id)
+
+    selected_videos = intake_values.get("Selected video count", source_values.get("Selected videos", "not available"))
+    transcript_processed = intake_values.get("Processed video count", "not available")
+
+    return {
+        tr("operator_run_id"): run_id,
+        tr("source_mode"): source_values.get("Input mode", "not available"),
+        tr("source_input"): source_values.get("Input value", "not available"),
+        tr("selected_videos"): selected_videos,
+        tr("successful_transcript"): transcript_processed,
+        tr("skipped_existing"): intake_values.get("Skipped existing count", "not available"),
+        tr("transcript_coverage"): transcript_coverage_label(transcript_processed),
+        tr("conversion_processed"): conversion_values.get("Processed file count", "not available"),
+        tr("model_status"): model_status_label(run_id),
+        "Radar-card count": counts.get("Radar-card count", "not available"),
+        tr("validation_passed"): counts.get("Passed count", "not available"),
+        tr("validation_warnings"): counts.get("Warning count", "not available"),
+        tr("validation_failed"): counts.get("Failed count", "not available"),
+        tr("content_hours"): tr("content_hours_placeholder"),
+        tr("output_folder"): str(run_output_folder(run_id)),
+        tr("handoff_summary"): str(ytm_run_summary_path(run_id)) if ytm_run_summary_path(run_id).exists() else "not available",
+        tr("final_status_label"): final_status_label(run_id),
     }
-
-    transcript_index = OUTPUT_ROOT / run_id / "derived" / "transcript_index.md"
-    if transcript_index.exists():
-        transcript_lines = transcript_index.read_text(encoding="utf-8", errors="ignore").splitlines()
-        preview["transcript count"] = str(sum(1 for line in transcript_lines if line.strip().startswith("- ")))
-
-    return preview
 
 def write_uploaded_source(run_id: str, uploaded_file) -> Path:
     run_id = safe_run_id(run_id)
@@ -527,15 +650,9 @@ operator_output_folder = run_output_folder(operator_run_id)
 show_result = bool(st.session_state.operator_mode_output) or operator_summary.exists()
 
 if show_result:
-    st.markdown("#### " + tr("safe_status"))
-    if operator_summary.exists():
-        st.write(tr("summary_available"))
-        st.write("handoffs/ytm_run_summary.md")
-    else:
-        st.write(tr("summary_missing"))
-
-    st.table([{"field": key, "value": value} for key, value in safe_summary_preview(operator_run_id).items()])
-    st.table([{"field": key, "value": value} for key, value in operator_resume_status(operator_run_id).items()])
+    st.markdown("#### " + tr("evidence_title"))
+    st.caption(tr("evidence_caption"))
+    st.table([{"field": key, "value": value} for key, value in evidence_card_data(operator_run_id).items()])
     st.code(str(operator_output_folder))
     if operator_output_folder.exists():
         st.write(tr("output_available"))
@@ -619,7 +736,7 @@ with st.expander(tr("advanced")):
     if st.session_state.url_pipeline_output:
         st.code(st.session_state.url_pipeline_output)
 
-    url_pipeline_preview = safe_summary_preview(url_pipeline_run_id)
+    url_pipeline_preview = evidence_card_data(url_pipeline_run_id)
     st.write(tr("safe_preview"))
     st.table([{"field": key, "value": value} for key, value in url_pipeline_preview.items()])
 
