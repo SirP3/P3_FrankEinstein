@@ -122,6 +122,7 @@ The Streamlit UI also includes a compact `YTM Operator Mode` panel.
 - List-file support is implemented in the URL pipeline runner and Operator Mode UI.
 - A conservative skip-existing layer is implemented for transcript download and VTT-to-TXT conversion.
 - Existing transcript/runtime-derived artifacts are skipped when present; `--limit` remains the cap for new processing attempts.
+- Operator UI shows safe resume counters: selected, processed, skipped existing, limit cap, and final status.
 - Acceptance run: `ytm-list-file-smoke-001`
 - Input mode: local ignored list-file
 - Source intake selected two video IDs/URLs.

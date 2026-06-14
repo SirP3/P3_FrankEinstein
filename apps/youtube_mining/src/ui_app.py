@@ -89,6 +89,39 @@ def validation_counts(run_id: str) -> dict[str, str]:
                 counts[label] = line[len(prefix):].strip()
     return counts
 
+def read_log_values(path: Path, labels: list[str]) -> dict[str, str]:
+    values = {}
+    if not path.exists():
+        return values
+    for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        for label in labels:
+            prefix = label + ":"
+            if line.startswith(prefix):
+                values[label] = line[len(prefix):].strip()
+    return values
+
+def operator_resume_status(run_id: str) -> dict[str, str]:
+    run_id = safe_run_id(run_id)
+    run_dir = OUTPUT_ROOT / run_id
+    intake = read_log_values(
+        run_dir / "source" / "transcript-intake-log.md",
+        ["Selected video count", "Processed video count", "Skipped existing count", "Processing limit"],
+    )
+    conversion = read_log_values(
+        run_dir / "derived" / "transcript-conversion-log.md",
+        ["Processed file count", "Skipped existing count", "Processing limit"],
+    )
+    summary = read_log_values(run_dir / "handoffs" / "ytm_run_summary.md", ["Final status"])
+    return {
+        "selected": intake.get("Selected video count", "not available"),
+        "transcript processed": intake.get("Processed video count", "not available"),
+        "transcript skipped existing": intake.get("Skipped existing count", "not available"),
+        "conversion processed": conversion.get("Processed file count", "not available"),
+        "conversion skipped existing": conversion.get("Skipped existing count", "not available"),
+        "limit cap": intake.get("Processing limit", conversion.get("Processing limit", "not available")),
+        "final status": summary.get("Final status", "not available"),
+    }
+
 def safe_summary_preview(run_id: str) -> dict[str, str]:
     run_id = safe_run_id(run_id)
     summary = ytm_run_summary_path(run_id)
@@ -191,6 +224,9 @@ if operator_summary.exists():
     st.write("handoffs/ytm_run_summary.md")
 else:
     st.write("YTM run summary: not available yet")
+
+st.write("Resume / skip-existing status")
+st.table([{"field": key, "value": value} for key, value in operator_resume_status(operator_run_id).items()])
 
 operator_output_folder = run_output_folder(operator_run_id)
 st.write("Output folder")
