@@ -170,6 +170,13 @@ def main() -> None:
             print("Report path:", report)
             raise SystemExit(1)
 
+        if not run_required_stage(stages, "build combined radar", "build_combined_radar.py", [args.run_id]):
+            final_status = "fail"
+            report = write_report(args.run_id, args.model, args.skip_model, stages, final_status)
+            print_summary(stages)
+            print("Report path:", report)
+            raise SystemExit(1)
+
         if not run_required_stage(stages, "build radar-card brief", "build_radar_card_brief.py", [args.run_id]):
             final_status = "fail"
             report = write_report(args.run_id, args.model, args.skip_model, stages, final_status)

@@ -53,6 +53,7 @@ UI_TEXT = {
         "hu_cards": "HU cards",
         "en_cards": "EN cards",
         "combined_radar": "Combined radar",
+        "combined_radar_size": "Combined radar size",
         "keyword_index": "Keyword index",
         "quality_pass": "Qwinni quality-pass",
         "handoff_pack": "Handoff pack",
@@ -195,6 +196,7 @@ UI_TEXT = {
         "hu_cards": "HU kártyák",
         "en_cards": "EN kártyák",
         "combined_radar": "Összesített radar",
+        "combined_radar_size": "Összesített radar méret",
         "keyword_index": "Kulcsszó index",
         "quality_pass": "Qwinni quality-pass",
         "handoff_pack": "Handoff pack",
@@ -546,12 +548,16 @@ def output_package_data(run_id: str) -> dict[str, str]:
     handoff_size = tr("not_available_yet")
     if handoff_pack and handoff_pack.exists():
         handoff_size = str(handoff_pack.stat().st_size) + " bytes"
+    combined_size = tr("not_available_yet")
+    if combined_radar.exists():
+        combined_size = str(combined_radar.stat().st_size) + " bytes"
 
     return {
         tr("radar_cards"): radar_counts["total"],
         tr("hu_cards"): radar_counts["hu"],
         tr("en_cards"): radar_counts["en"],
         tr("combined_radar"): file_status(combined_radar),
+        tr("combined_radar_size"): combined_size,
         tr("keyword_index"): file_status(keyword_index),
         tr("quality_pass"): file_status(quality_pass),
         tr("handoff_pack"): file_status(handoff_pack) if handoff_pack else tr("not_available_yet"),

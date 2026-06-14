@@ -25,7 +25,6 @@ This is enough for a small end-to-end operator run, but it is not yet the full o
 - Browser-session handling for harder YouTube transcript access cases
 - Content-hours calculation
 - Rich transcript success / fail / unavailable detail in operator evidence
-- Combined radar generation
 - Radar keyword index generation
 - Quality-pass generation
 - Full handoff package generation

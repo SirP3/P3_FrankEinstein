@@ -10,6 +10,7 @@ INPUT_PATHS = [
     "handoffs/operator_brief.md",
     "handoffs/radar_card_brief.md",
     "handoffs/ytm_pipeline_smoke_report.md",
+    "derived/radar_cards/all-video-radar-cards-combined.md",
     "derived/radar_cards/radar-card-validation-report.md",
     "derived/transcript_index.md",
     "derived/model_input_manifest.md",
@@ -76,6 +77,7 @@ def write_summary(run_id: str, run_dir: Path, handoffs_dir: Path) -> Path:
     transcript_index = run_dir / "derived" / "transcript_index.md"
     model_manifest = run_dir / "derived" / "model_input_manifest.md"
     validation_report = run_dir / "derived" / "radar_cards" / "radar-card-validation-report.md"
+    combined_radar = run_dir / "derived" / "radar_cards" / "all-video-radar-cards-combined.md"
 
     transcript_values = read_key_values(transcript_index, ["Transcript TXT file count", "Total characters"])
     model_values = read_key_values(model_manifest, ["Transcript TXT file count", "Total characters"])
@@ -118,6 +120,11 @@ def write_summary(run_id: str, run_dir: Path, handoffs_dir: Path) -> Path:
     lines.append("- Passed count: " + validation_values.get("Passed count", "not available"))
     lines.append("- Warning count: " + validation_values.get("Warning count", "not available"))
     lines.append("- Failed count: " + validation_values.get("Failed count", "not available"))
+    lines.append("")
+    lines.append("## Combined Radar Status")
+    lines.append("")
+    lines.append("- Combined radar artifact: " + status_for(combined_radar))
+    lines.append("- Combined radar size: " + (str(combined_radar.stat().st_size) + " bytes" if combined_radar.exists() else "not available"))
     lines.append("")
     lines.append("## Handoff Outputs")
     lines.append("")
