@@ -119,11 +119,13 @@ The Streamlit UI also includes a compact `YTM Operator Mode` panel.
 
 ## List-file Smoke Acceptance
 
+- List-file support is implemented in the URL pipeline runner and Operator Mode UI.
 - Acceptance run: `ytm-list-file-smoke-001`
 - Input mode: local ignored list-file
 - Source intake selected two video IDs/URLs.
 - Downstream transcript processing respected `--limit 1`.
 - Smoke was run with `--skip-model`; an incomplete final summary status is expected in this lightweight mode.
+- Heavier model/radar-card acceptance for list-file input is still a later step.
 - Runtime/source artifacts stayed under ignored local paths.
 
 ## Current UI Run Summary

@@ -148,6 +148,7 @@ with col2:
         st.code(st.session_state.safety_audit_output)
 
 st.subheader("YTM Operator Mode")
+st.caption("Single-source or local list-file source intake. This is not channel-scale automation.")
 operator_run_id = st.text_input("Operator run ID", value="ytm-operator-001")
 operator_input_mode = st.radio("Operator source input", ["Single URL/video ID", "List-file path"], horizontal=True)
 operator_url = ""
@@ -156,8 +157,10 @@ if operator_input_mode == "Single URL/video ID":
     operator_url = st.text_input("Operator YouTube URL or video ID")
 else:
     operator_list_file = st.text_input("Operator list-file path")
+    st.caption("Use a local-only text file path. File content is not previewed in the UI.")
 operator_model = st.text_input("Operator model", value="qwen2.5:7b")
 operator_limit = st.number_input("Operator limit", min_value=1, value=1, step=1)
+st.caption("Limit is the processing safety cap. Keep it small while validating list-file input.")
 operator_skip_model = st.checkbox("Operator skip model", value=False)
 if st.button("Run YTM pipeline"):
     operator_source_value = operator_url.strip() if operator_input_mode == "Single URL/video ID" else operator_list_file.strip()
