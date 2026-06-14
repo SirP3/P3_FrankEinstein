@@ -17,7 +17,7 @@ ALLOWED_SOURCE_EXTENSIONS = {".md", ".txt", ".vtt", ".srt", ".json"}
 UI_TEXT = {
     "en": {
         "title": "P3FE YouTube Mining",
-        "caption": "Create a local, safe radar/handoff package from a YouTube source.",
+        "caption": "Create a local radar/handoff package from a YouTube source.",
         "intro": "Public Source, Private Processing, Clean Output. Source/runtime content stays local-only.",
         "operator_mode": "New YTM run",
         "operator_caption": "Choose a source, keep the safety cap small, then start mining.",
@@ -25,7 +25,7 @@ UI_TEXT = {
         "run_settings": "Run settings",
         "operator_actions": "Start",
         "safe_status": "Safe status",
-        "advanced": "Advanced",
+        "advanced": "Advanced / diagnostics",
         "command_output": "Command output",
         "operator_run_id": "Operator run ID",
         "operator_source_input": "Operator source input",
@@ -118,7 +118,7 @@ UI_TEXT = {
     },
     "hu": {
         "title": "P3FE YouTube Mining",
-        "caption": "YouTube forrásból helyi, biztonságos radar/handoff csomagot készít.",
+        "caption": "YouTube forrásból helyi radar/handoff csomagot készít.",
         "intro": "Public Source, Private Processing, Clean Output. A forrás- és runtime tartalom lokális marad.",
         "operator_mode": "Új YTM futás",
         "operator_caption": "Válassz forrást, tartsd kicsin a biztonsági limitet, majd indítsd a bányászást.",
@@ -126,7 +126,7 @@ UI_TEXT = {
         "run_settings": "Futási beállítások",
         "operator_actions": "Indítás",
         "safe_status": "Biztonságos státusz",
-        "advanced": "Haladó",
+        "advanced": "Haladó / diagnosztika",
         "command_output": "Parancskimenet",
         "operator_run_id": "Operátori run ID",
         "operator_source_input": "Operátori forrásbemenet",
@@ -405,7 +405,7 @@ def tr(key: str) -> str:
 
 st.title(tr("title"))
 st.caption(tr("caption"))
-st.info(tr("intro"))
+st.caption(tr("intro"))
 
 st.subheader(tr("operator_mode"))
 st.caption(tr("operator_caption"))
@@ -522,25 +522,20 @@ if start_clicked:
     else:
         st.session_state.operator_mode_output = tr("source_required")
 
-if st.session_state.operator_mode_output:
-    with st.expander(tr("command_output")):
-        st.code(st.session_state.operator_mode_output)
-
-st.markdown("#### " + tr("safe_status"))
 operator_summary = ytm_run_summary_path(safe_run_id(operator_run_id))
-if operator_summary.exists():
-    st.write(tr("summary_available"))
-    st.write("handoffs/ytm_run_summary.md")
-else:
-    st.write(tr("summary_missing"))
-
-st.table([{"field": key, "value": value} for key, value in safe_summary_preview(operator_run_id).items()])
-
-with st.expander(tr("resume_status")):
-    st.table([{"field": key, "value": value} for key, value in operator_resume_status(operator_run_id).items()])
-
 operator_output_folder = run_output_folder(operator_run_id)
-with st.expander(tr("output_folder")):
+show_result = bool(st.session_state.operator_mode_output) or operator_summary.exists()
+
+if show_result:
+    st.markdown("#### " + tr("safe_status"))
+    if operator_summary.exists():
+        st.write(tr("summary_available"))
+        st.write("handoffs/ytm_run_summary.md")
+    else:
+        st.write(tr("summary_missing"))
+
+    st.table([{"field": key, "value": value} for key, value in safe_summary_preview(operator_run_id).items()])
+    st.table([{"field": key, "value": value} for key, value in operator_resume_status(operator_run_id).items()])
     st.code(str(operator_output_folder))
     if operator_output_folder.exists():
         st.write(tr("output_available"))
@@ -549,20 +544,25 @@ with st.expander(tr("output_folder")):
     else:
         st.write(tr("output_missing"))
 
-st.subheader(tr("advanced"))
-st.caption(tr("advanced_help"))
+with st.expander(tr("advanced")):
+    st.caption(tr("advanced_help"))
 
-with st.expander(tr("runtime_safety")):
-    st.subheader(tr("runtime_boundary"))
-    st.code(str(OUTPUT_ROOT))
-    st.write(tr("runtime_note"))
-    st.subheader(tr("safety_status"))
+    if st.session_state.operator_mode_output:
+        st.subheader(tr("command_output"))
+        st.code(st.session_state.operator_mode_output)
+
+    st.subheader(tr("runtime_safety"))
+    st.caption("Checks that public/private runtime boundaries are respected." if UI_LANG == "en" else "Ellenőrzi, hogy a publikus/privát runtime határok rendben vannak-e.")
     if st.button(tr("run_safety_audit"), key="run_safety_audit"):
         st.session_state.safety_audit_output = run_command(["python3", "scripts/safety/public_safety_audit.py"])
     if st.session_state.safety_audit_output:
         st.code(st.session_state.safety_audit_output)
 
-with st.expander(tr("local_runs")):
+    st.subheader(tr("runtime_boundary"))
+    st.code(str(OUTPUT_ROOT))
+    st.write(tr("runtime_note"))
+
+    st.subheader(tr("local_runs"))
     st.caption(tr("local_runs_help"))
     runs = list_runs()
     if runs:
@@ -588,10 +588,10 @@ with st.expander(tr("local_runs")):
                 "| failed " + counts.get("Failed count", "not available"),
             )
 
-if "selected_run" not in locals():
-    selected_run = ""
+    if "selected_run" not in locals():
+        selected_run = ""
 
-with st.expander(tr("legacy_url")):
+    st.subheader(tr("legacy_url"))
     url_pipeline_run_id = st.text_input(tr("url_run_id"), value="ytm-ui-url-test-001", key="url_pipeline_run_id")
     url_pipeline_input = st.text_input(tr("url_input"), key="url_pipeline_input")
     url_pipeline_model = st.text_input(tr("url_model"), value="qwen2.5:7b", key="url_pipeline_model")
@@ -623,7 +623,7 @@ with st.expander(tr("legacy_url")):
     st.write(tr("safe_preview"))
     st.table([{"field": key, "value": value} for key, value in url_pipeline_preview.items()])
 
-with st.expander(tr("manual_controls")):
+    st.subheader(tr("manual_controls"))
     st.subheader(tr("create_run"))
     run_id = st.text_input(tr("run_id"), value="ui-smoke-test-001", key="manual_run_id")
     if st.button(tr("create_run_folder"), key="manual_create_run_folder"):
@@ -692,7 +692,6 @@ with st.expander(tr("manual_controls")):
         if brief.exists():
             st.write(tr("operator_brief_available"))
             st.write("handoffs/operator_brief.md")
-            st.markdown(brief.read_text(encoding="utf-8", errors="ignore"))
         else:
             st.write(tr("operator_brief_missing"))
 
@@ -731,5 +730,5 @@ with st.expander(tr("manual_controls")):
     if st.session_state.workspace_dashboard_output:
         st.code(st.session_state.workspace_dashboard_output)
 
-with st.expander(tr("limitations")):
+    st.subheader(tr("limitations"))
     st.markdown(tr("limitations_text"))
