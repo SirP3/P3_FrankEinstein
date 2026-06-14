@@ -85,6 +85,28 @@ def validation_counts(run_id: str) -> dict[str, str]:
                 counts[label] = line[len(prefix):].strip()
     return counts
 
+def safe_summary_preview(run_id: str) -> dict[str, str]:
+    run_id = safe_run_id(run_id)
+    summary = ytm_run_summary_path(run_id)
+    counts = validation_counts(run_id)
+    preview = {
+        "final status": "available" if summary.exists() else "summary not found yet",
+        "transcript count": "not available",
+        "radar-card count": counts.get("Radar-card count", "not available"),
+        "passed": counts.get("Passed count", "not available"),
+        "warnings": counts.get("Warning count", "not available"),
+        "failed": counts.get("Failed count", "not available"),
+        "output path": str(summary),
+        "policy note": "Public Source, Private Processing, Clean Output — source/runtime content is not displayed in UI preview.",
+    }
+
+    transcript_index = OUTPUT_ROOT / run_id / "derived" / "transcript_index.md"
+    if transcript_index.exists():
+        transcript_lines = transcript_index.read_text(encoding="utf-8", errors="ignore").splitlines()
+        preview["transcript count"] = str(sum(1 for line in transcript_lines if line.strip().startswith("- ")))
+
+    return preview
+
 def write_uploaded_source(run_id: str, uploaded_file) -> Path:
     run_id = safe_run_id(run_id)
     name = Path(uploaded_file.name).name
@@ -105,7 +127,7 @@ st.set_page_config(page_title="P3FE YTM v0.2", layout="wide")
 
 st.title("P3FE YouTube Mining v0.2")
 st.caption("Safety-first local source adapter shell")
-st.warning("Skeleton UI. Source intake exists. Transcript mining is not implemented yet.")
+st.info("Safety-first local YTM operator UI. Source/runtime content stays local-only and is not previewed as raw content.")
 
 col1, col2 = st.columns(2)
 
@@ -210,12 +232,9 @@ if st.button("Run URL pipeline"):
 if st.session_state.url_pipeline_output:
     st.code(st.session_state.url_pipeline_output)
 
-url_pipeline_summary = ytm_run_summary_path(safe_run_id(url_pipeline_run_id))
-if url_pipeline_summary.exists():
-    st.write("YTM run summary: available")
-    st.write("handoffs/ytm_run_summary.md")
-else:
-    st.write("YTM run summary: not available yet")
+url_pipeline_preview = safe_summary_preview(url_pipeline_run_id)
+st.write("YTM safe final summary preview")
+st.table([{"field": key, "value": value} for key, value in url_pipeline_preview.items()])
 
 st.subheader("Create local run folder")
 run_id = st.text_input("Run ID", value="ui-smoke-test-001")
