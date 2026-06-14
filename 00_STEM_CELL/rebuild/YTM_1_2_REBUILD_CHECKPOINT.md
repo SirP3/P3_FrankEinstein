@@ -59,7 +59,7 @@ apps/youtube_mining/scripts/run_ytm_url_pipeline.py
 It can run the full YTM chain from a YouTube URL/video ID and run ID:
 
 ```text
-YouTube URL + run_id
+YouTube URL or list-file + run_id
 -> create run folder if missing
 -> source intake
 -> full pipeline smoke
@@ -100,7 +100,7 @@ YouTube URL + run ID
 
 The Streamlit UI also includes a compact `YTM Operator Mode` panel.
 
-- It can run the existing URL pipeline from a Run ID plus YouTube URL/video ID.
+- It can run the existing source pipeline from a Run ID plus single YouTube URL/video ID or a local list-file path.
 - It shows only safe status/path output for the final run summary.
 - It does not display source transcript content, cleaned TXT content, model packet content, or full radar-card content.
 - This moves the current YTM baseline from developer-script workflow toward operator-usable workflow.
@@ -160,6 +160,7 @@ Public Source, Private Processing, Clean Output.
 
 - Core pipeline works.
 - One-command URL pipeline works.
+- List-file source input is supported with the same downstream safety limit.
 - UI URL pipeline control exists.
 - UI Operator Mode exists.
 - Safe final summary preview exists.

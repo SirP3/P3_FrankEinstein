@@ -43,6 +43,7 @@ def markdown_cell(value: str) -> str:
 
 def write_report(
     run_id: str,
+    input_mode: str,
     input_value: str,
     model: str,
     limit: int,
@@ -59,6 +60,7 @@ def write_report(
     lines.append("")
     lines.append("Run ID: " + run_id)
     lines.append("Generated UTC: " + datetime.now(timezone.utc).isoformat())
+    lines.append("Input mode: " + input_mode)
     lines.append("Input value: " + input_value)
     lines.append("Model: " + model)
     lines.append("Limit: " + str(limit))
@@ -96,9 +98,11 @@ def run_stage(stages: list[dict[str, str]], name: str, script_name: str, args: l
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the full local-only YTM pipeline from one YouTube URL or video ID.")
+    parser = argparse.ArgumentParser(description="Run the full local-only YTM pipeline from YouTube source input.")
     parser.add_argument("run_id")
-    parser.add_argument("--url", required=True, help="YouTube URL or video ID")
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--url", help="YouTube URL or video ID")
+    source.add_argument("--list-file", help="Local file containing YouTube URLs or video IDs")
     parser.add_argument("--model", default="qwen2.5:7b")
     parser.add_argument("--limit", type=int, default=1)
     parser.add_argument("--skip-model", action="store_true")
@@ -114,16 +118,25 @@ def main() -> None:
     if args.skip_model:
         smoke_args.append("--skip-model")
 
+    if args.url:
+        source_args = ["--url", args.url]
+        input_mode = "url"
+        input_value = args.url
+    else:
+        source_args = ["--list-file", args.list_file]
+        input_mode = "list-file"
+        input_value = args.list_file
+
     pipeline = [
         ("create run folder", "create_run_folder.py", [args.run_id]),
-        ("YouTube source intake", "intake_youtube_source.py", [args.run_id, "--url", args.url]),
+        ("YouTube source intake", "intake_youtube_source.py", [args.run_id, *source_args]),
         ("full pipeline smoke", "run_ytm_pipeline_smoke.py", smoke_args),
     ]
 
     for name, script_name, stage_args in pipeline:
         if not run_stage(stages, name, script_name, stage_args):
             final_status = "fail"
-            report = write_report(args.run_id, args.url, args.model, args.limit, args.skip_model, stages, final_status)
+            report = write_report(args.run_id, input_mode, input_value, args.model, args.limit, args.skip_model, stages, final_status)
             print_summary(stages)
             print("Final status:", final_status)
             print("Report path:", report)
@@ -136,7 +149,7 @@ def main() -> None:
     else:
         add_stage(stages, "final run summary", "passed", "handoffs/ytm_run_summary.md")
 
-    report = write_report(args.run_id, args.url, args.model, args.limit, args.skip_model, stages, final_status)
+    report = write_report(args.run_id, input_mode, input_value, args.model, args.limit, args.skip_model, stages, final_status)
     print_summary(stages)
     print("Final status:", final_status)
     print("Expected final output:", summary)

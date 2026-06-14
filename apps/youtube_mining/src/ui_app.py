@@ -149,18 +149,25 @@ with col2:
 
 st.subheader("YTM Operator Mode")
 operator_run_id = st.text_input("Operator run ID", value="ytm-operator-001")
-operator_url = st.text_input("Operator YouTube URL or video ID")
+operator_input_mode = st.radio("Operator source input", ["Single URL/video ID", "List-file path"], horizontal=True)
+operator_url = ""
+operator_list_file = ""
+if operator_input_mode == "Single URL/video ID":
+    operator_url = st.text_input("Operator YouTube URL or video ID")
+else:
+    operator_list_file = st.text_input("Operator list-file path")
 operator_model = st.text_input("Operator model", value="qwen2.5:7b")
 operator_limit = st.number_input("Operator limit", min_value=1, value=1, step=1)
 operator_skip_model = st.checkbox("Operator skip model", value=False)
 if st.button("Run YTM pipeline"):
-    if operator_url.strip():
+    operator_source_value = operator_url.strip() if operator_input_mode == "Single URL/video ID" else operator_list_file.strip()
+    if operator_source_value:
         command = [
             "python3",
             "apps/youtube_mining/scripts/run_ytm_url_pipeline.py",
             operator_run_id,
-            "--url",
-            operator_url.strip(),
+            "--url" if operator_input_mode == "Single URL/video ID" else "--list-file",
+            operator_source_value,
             "--model",
             operator_model.strip() or "qwen2.5:7b",
             "--limit",
@@ -170,7 +177,7 @@ if st.button("Run YTM pipeline"):
             command.append("--skip-model")
         st.session_state.operator_mode_output = concise_output(run_command(command))
     else:
-        st.session_state.operator_mode_output = "ERROR YouTube URL or video ID is required."
+        st.session_state.operator_mode_output = "ERROR source input is required."
 
 if st.session_state.operator_mode_output:
     st.code(st.session_state.operator_mode_output)
