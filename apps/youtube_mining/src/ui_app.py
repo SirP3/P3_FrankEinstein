@@ -47,6 +47,20 @@ UI_TEXT = {
         "validation_failed": "Validation failed",
         "content_hours": "Content hours",
         "content_hours_placeholder": "not calculated yet",
+        "output_package": "Output package",
+        "output_package_caption": "This section shows what transferable work package was produced, not the raw source content.",
+        "radar_cards": "Radar-cards",
+        "hu_cards": "HU cards",
+        "en_cards": "EN cards",
+        "combined_radar": "Combined radar",
+        "keyword_index": "Keyword index",
+        "quality_pass": "Qwinni quality-pass",
+        "handoff_pack": "Handoff pack",
+        "handoff_pack_size": "Handoff pack size",
+        "latest_update": "Latest update",
+        "not_available_yet": "not available yet",
+        "running": "running",
+        "not_running": "not running",
         "handoff_summary": "Handoff / summary",
         "final_status_label": "Final status",
         "final_status_pass": "pass - smoke/pipeline completed",
@@ -175,6 +189,20 @@ UI_TEXT = {
         "validation_failed": "Validáció failed",
         "content_hours": "Tartalomóra",
         "content_hours_placeholder": "még nincs számolva",
+        "output_package": "Kimeneti csomag",
+        "output_package_caption": "Ez a rész azt mutatja, milyen átadható munkacsomag készült, nem a nyers forrástartalmat.",
+        "radar_cards": "Radar-cardok",
+        "hu_cards": "HU kártyák",
+        "en_cards": "EN kártyák",
+        "combined_radar": "Összesített radar",
+        "keyword_index": "Kulcsszó index",
+        "quality_pass": "Qwinni quality-pass",
+        "handoff_pack": "Handoff pack",
+        "handoff_pack_size": "Handoff pack méret",
+        "latest_update": "Utolsó frissítés",
+        "not_available_yet": "még nem elérhető",
+        "running": "fut",
+        "not_running": "nem fut",
         "handoff_summary": "Handoff / összefoglaló",
         "final_status_label": "Végső státusz",
         "final_status_pass": "pass - a smoke/pipeline lefutott",
@@ -441,6 +469,58 @@ def model_status_label(run_id: str) -> str:
 
     return tr("model_unknown")
 
+def file_status(path: Path) -> str:
+    return "available" if path.exists() else tr("not_available_yet")
+
+def radar_card_counts(run_id: str) -> dict[str, str]:
+    run_id = safe_run_id(run_id)
+    radar_dir = OUTPUT_ROOT / run_id / "derived" / "radar_cards"
+    if not radar_dir.exists():
+        return {"total": tr("not_available_yet"), "hu": tr("not_available_yet"), "en": tr("not_available_yet")}
+
+    cards = sorted(path for path in radar_dir.glob("*.radar-card.md") if path.is_file())
+    hu_count = sum(1 for path in cards if re.search(r"\.hu(\.|$)", path.name))
+    en_count = sum(1 for path in cards if re.search(r"\.en(\.|$)", path.name))
+    return {"total": str(len(cards)), "hu": str(hu_count), "en": str(en_count)}
+
+def handoff_pack_path(run_dir: Path) -> Path | None:
+    candidates = [
+        run_dir / "handoffs" / "handoff_pack.md",
+        run_dir / "handoffs" / (run_dir.name + "__handoff_pack.md"),
+        run_dir / "handoffs" / "handoff_pack_002.md",
+        run_dir / "handoff_pack.md",
+        run_dir / (run_dir.name + "__handoff_pack.md"),
+        run_dir / "handoff_pack_002.md",
+    ]
+    for path in candidates:
+        if path.exists():
+            return path
+    return None
+
+def latest_output_update(run_dir: Path) -> str:
+    candidates = [
+        path for path in run_dir.rglob("*")
+        if path.is_file() and path.suffix.lower() in {".md", ".txt", ".vtt"}
+    ]
+    if not candidates:
+        return tr("not_available_yet")
+    latest = max(candidates, key=lambda path: path.stat().st_mtime)
+    return datetime.fromtimestamp(latest.stat().st_mtime).isoformat(timespec="seconds")
+
+def model_process_status(run_id: str) -> str:
+    run_id = safe_run_id(run_id)
+    run_dir = OUTPUT_ROOT / run_id
+    smoke_report = pipeline_smoke_report_path(run_id)
+    status = read_stage_status(smoke_report, "run local radar-card model")
+    if status in {"passed", "failed", "skipped"}:
+        return tr("not_running")
+
+    radar_run_log = run_dir / "derived" / "radar_cards" / "radar-card-run-log.md"
+    if radar_run_log.exists() and not (run_dir / "derived" / "radar_cards" / "radar-card-validation-report.md").exists():
+        return tr("unknown")
+
+    return tr("unknown")
+
 def final_status_label(run_id: str) -> str:
     run_id = safe_run_id(run_id)
     summary = read_log_values(ytm_run_summary_path(run_id), ["Final status"])
@@ -452,6 +532,33 @@ def final_status_label(run_id: str) -> str:
     if value == "failed":
         return tr("final_status_failed")
     return tr("final_status_incomplete")
+
+def output_package_data(run_id: str) -> dict[str, str]:
+    run_id = safe_run_id(run_id)
+    run_dir = OUTPUT_ROOT / run_id
+    radar_dir = run_dir / "derived" / "radar_cards"
+    radar_counts = radar_card_counts(run_id)
+    combined_radar = radar_dir / "all-video-radar-cards-combined.md"
+    keyword_index = radar_dir / "radar_keyword_index_001.md"
+    quality_pass = radar_dir / "qwinni_quality_pass_001.md"
+    handoff_pack = handoff_pack_path(run_dir)
+
+    handoff_size = tr("not_available_yet")
+    if handoff_pack and handoff_pack.exists():
+        handoff_size = str(handoff_pack.stat().st_size) + " bytes"
+
+    return {
+        tr("radar_cards"): radar_counts["total"],
+        tr("hu_cards"): radar_counts["hu"],
+        tr("en_cards"): radar_counts["en"],
+        tr("combined_radar"): file_status(combined_radar),
+        tr("keyword_index"): file_status(keyword_index),
+        tr("quality_pass"): file_status(quality_pass),
+        tr("handoff_pack"): file_status(handoff_pack) if handoff_pack else tr("not_available_yet"),
+        tr("handoff_pack_size"): handoff_size,
+        tr("latest_update"): latest_output_update(run_dir),
+        tr("model_status"): model_process_status(run_id),
+    }
 
 def evidence_card_data(run_id: str) -> dict[str, str]:
     run_id = safe_run_id(run_id)
@@ -653,6 +760,9 @@ if show_result:
     st.markdown("#### " + tr("evidence_title"))
     st.caption(tr("evidence_caption"))
     st.table([{"field": key, "value": value} for key, value in evidence_card_data(operator_run_id).items()])
+    st.markdown("#### " + tr("output_package"))
+    st.caption(tr("output_package_caption"))
+    st.table([{"field": key, "value": value} for key, value in output_package_data(operator_run_id).items()])
     st.code(str(operator_output_folder))
     if operator_output_folder.exists():
         st.write(tr("output_available"))
