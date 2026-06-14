@@ -128,7 +128,17 @@ The Streamlit UI also includes a compact `YTM Operator Mode` panel.
 - Source intake selected two video IDs/URLs.
 - Downstream transcript processing respected `--limit 1`.
 - Smoke was run with `--skip-model`; an incomplete final summary status is expected in this lightweight mode.
-- Heavier model/radar-card acceptance for list-file input is still a later step.
+- Runtime/source artifacts stayed under ignored local paths.
+
+## List-file Model Acceptance
+
+- Acceptance run: `ytm-list-file-model-001`
+- Input mode: local ignored list-file
+- Source intake selected two video IDs/URLs.
+- Downstream processing respected `--limit 1`.
+- Local model/radar-card path completed.
+- Radar-card validation report was generated with pass status.
+- Final run summary status: pass.
 - Runtime/source artifacts stayed under ignored local paths.
 
 ## Current UI Run Summary
