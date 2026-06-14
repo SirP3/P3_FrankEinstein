@@ -12,6 +12,7 @@ INPUT_PATHS = [
     "handoffs/ytm_pipeline_smoke_report.md",
     "derived/radar_cards/all-video-radar-cards-combined.md",
     "derived/radar_cards/radar_keyword_index_001.md",
+    "derived/radar_cards/qwinni_quality_pass_001.md",
     "derived/radar_cards/radar-card-validation-report.md",
     "derived/transcript_index.md",
     "derived/model_input_manifest.md",
@@ -80,6 +81,7 @@ def write_summary(run_id: str, run_dir: Path, handoffs_dir: Path) -> Path:
     validation_report = run_dir / "derived" / "radar_cards" / "radar-card-validation-report.md"
     combined_radar = run_dir / "derived" / "radar_cards" / "all-video-radar-cards-combined.md"
     keyword_index = run_dir / "derived" / "radar_cards" / "radar_keyword_index_001.md"
+    quality_pass = run_dir / "derived" / "radar_cards" / "qwinni_quality_pass_001.md"
 
     transcript_values = read_key_values(transcript_index, ["Transcript TXT file count", "Total characters"])
     model_values = read_key_values(model_manifest, ["Transcript TXT file count", "Total characters"])
@@ -132,6 +134,11 @@ def write_summary(run_id: str, run_dir: Path, handoffs_dir: Path) -> Path:
     lines.append("")
     lines.append("- Radar keyword index: " + status_for(keyword_index))
     lines.append("- Radar keyword index size: " + (str(keyword_index.stat().st_size) + " bytes" if keyword_index.exists() else "not available"))
+    lines.append("")
+    lines.append("## Quality Pass Status")
+    lines.append("")
+    lines.append("- Quality pass artifact: " + status_for(quality_pass))
+    lines.append("- Quality pass size: " + (str(quality_pass.stat().st_size) + " bytes" if quality_pass.exists() else "not available"))
     lines.append("")
     lines.append("## Handoff Outputs")
     lines.append("")
