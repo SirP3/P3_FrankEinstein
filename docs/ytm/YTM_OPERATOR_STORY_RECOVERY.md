@@ -18,7 +18,7 @@ The operator should feel:
 - I understand how large the run is.
 - I understand what the system will attempt.
 - I know where the run output will land.
-- I can judge whether the run was useful without reading raw transcript content.
+- I can judge whether the run was useful without reading source text body content.
 
 ## 2. What Gave The Old YTM Wow Feeling
 
@@ -106,7 +106,7 @@ The operator story needs these metrics as first-class safe outputs:
 - radar-card count
 - handoff path
 
-These should be presented as safe evidence, not as raw transcript previews.
+These should be presented as safe evidence, not as source text body previews.
 
 ## 7. What v1.2 Already Has
 
