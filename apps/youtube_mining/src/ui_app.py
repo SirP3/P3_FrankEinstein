@@ -20,6 +20,12 @@ UI_TEXT = {
         "intro": "Safety-first local YTM operator UI. Source/runtime content stays local-only and is not previewed as raw content.",
         "operator_mode": "YTM Operator Mode",
         "operator_caption": "Run one controlled YTM source intake. This is not channel-scale automation.",
+        "source_section": "Source",
+        "run_settings": "Run settings",
+        "operator_actions": "Operator actions",
+        "safe_status": "Safe status",
+        "advanced": "Advanced",
+        "command_output": "Command output",
         "operator_run_id": "Operator run ID",
         "operator_source_input": "Operator source input",
         "single_input": "Single URL/video ID",
@@ -96,6 +102,12 @@ UI_TEXT = {
         "intro": "Biztonságos helyi YTM operátori felület. A forrás- és runtime tartalom lokális marad, nyers tartalomként nem jelenik meg.",
         "operator_mode": "YTM Operátori mód",
         "operator_caption": "Egy kontrollált YTM forrásfuttatás indítása. Ez nem csatornaszintű automatizálás.",
+        "source_section": "Forrás",
+        "run_settings": "Futási beállítások",
+        "operator_actions": "Műveletek",
+        "safe_status": "Biztonságos státusz",
+        "advanced": "Haladó",
+        "command_output": "Parancskimenet",
         "operator_run_id": "Operátori run ID",
         "operator_source_input": "Operátori forrásbemenet",
         "single_input": "Egy URL/video ID",
@@ -330,17 +342,14 @@ st.info(tr("intro"))
 st.subheader(tr("operator_mode"))
 st.caption(tr("operator_caption"))
 
-run_col, source_col = st.columns([1, 2])
-with run_col:
-    operator_run_id = st.text_input(tr("operator_run_id"), value="ytm-operator-001", key="operator_run_id")
-with source_col:
-    operator_input_mode = st.radio(
-        tr("operator_source_input"),
-        ["single", "list-file"],
-        horizontal=True,
-        format_func=lambda value: tr("single_input") if value == "single" else tr("list_file_input"),
-        key="operator_input_mode",
-    )
+st.markdown("#### " + tr("source_section"))
+operator_input_mode = st.radio(
+    tr("operator_source_input"),
+    ["single", "list-file"],
+    horizontal=True,
+    format_func=lambda value: tr("single_input") if value == "single" else tr("list_file_input"),
+    key="operator_input_mode",
+)
 
 operator_url = ""
 operator_list_file = ""
@@ -350,7 +359,10 @@ else:
     operator_list_file = st.text_input(tr("operator_list_file"), key="operator_list_file")
     st.caption(tr("list_file_caption"))
 
-settings_col1, settings_col2, settings_col3 = st.columns(3)
+st.markdown("#### " + tr("run_settings"))
+settings_col0, settings_col1, settings_col2, settings_col3 = st.columns([1.4, 1, 0.7, 0.7])
+with settings_col0:
+    operator_run_id = st.text_input(tr("operator_run_id"), value="ytm-operator-001", key="operator_run_id")
 with settings_col1:
     operator_model = st.text_input(tr("operator_model"), value="qwen2.5:7b", key="operator_model")
 with settings_col2:
@@ -359,6 +371,7 @@ with settings_col3:
     operator_skip_model = st.checkbox(tr("skip_model"), value=False, key="operator_skip_model")
 st.caption(tr("limit_caption"))
 
+st.markdown("#### " + tr("operator_actions"))
 if st.button(tr("run_pipeline"), key="operator_run_pipeline"):
     operator_source_value = operator_url.strip() if operator_input_mode == "single" else operator_list_file.strip()
     if operator_source_value:
@@ -380,14 +393,18 @@ if st.button(tr("run_pipeline"), key="operator_run_pipeline"):
         st.session_state.operator_mode_output = tr("source_required")
 
 if st.session_state.operator_mode_output:
-    st.code(st.session_state.operator_mode_output)
+    with st.expander(tr("command_output")):
+        st.code(st.session_state.operator_mode_output)
 
+st.markdown("#### " + tr("safe_status"))
 operator_summary = ytm_run_summary_path(safe_run_id(operator_run_id))
 if operator_summary.exists():
     st.write(tr("summary_available"))
     st.write("handoffs/ytm_run_summary.md")
 else:
     st.write(tr("summary_missing"))
+
+st.table([{"field": key, "value": value} for key, value in safe_summary_preview(operator_run_id).items()])
 
 with st.expander(tr("resume_status")):
     st.table([{"field": key, "value": value} for key, value in operator_resume_status(operator_run_id).items()])
@@ -401,6 +418,8 @@ with st.expander(tr("output_folder")):
             subprocess.run(["open", str(operator_output_folder)], check=False)
     else:
         st.write(tr("output_missing"))
+
+st.subheader(tr("advanced"))
 
 with st.expander(tr("runtime_safety")):
     st.subheader(tr("runtime_boundary"))
