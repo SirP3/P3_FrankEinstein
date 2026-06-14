@@ -101,6 +101,11 @@ def run_required_stage(stages: list[dict[str, str]], name: str, script_name: str
     return ok
 
 
+def refresh_run_summary(run_id: str) -> bool:
+    ok, _ = run_script("build_ytm_run_summary.py", [run_id])
+    return ok
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the existing YTM v0.2 pipeline as a local smoke test.")
     parser.add_argument("run_id")
@@ -180,6 +185,12 @@ def main() -> None:
         raise SystemExit(1)
 
     report = write_report(args.run_id, args.model, args.skip_model, stages, final_status)
+    if not refresh_run_summary(args.run_id):
+        final_status = "fail"
+        report = write_report(args.run_id, args.model, args.skip_model, stages, final_status)
+        print_summary(stages)
+        print("Report path:", report)
+        raise SystemExit(1)
     print_summary(stages)
     print("Final status:", final_status)
     print("Report path:", report)
