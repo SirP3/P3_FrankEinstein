@@ -36,20 +36,31 @@ def clean_vtt_text(vtt_text: str) -> str:
     return "\n".join(lines)
 
 
-def convert_files(vtt_files: list[Path], output_dir: Path) -> list[Path]:
+def target_for_vtt(vtt: Path, output_dir: Path) -> Path:
+    return output_dir / (vtt.stem + ".txt")
+
+
+def convert_files(vtt_files: list[Path], output_dir: Path, limit: int | None) -> tuple[list[Path], int]:
     output_dir.mkdir(parents=True, exist_ok=True)
     converted = []
+    skipped_count = 0
 
     for vtt in vtt_files:
+        target = target_for_vtt(vtt, output_dir)
+        if target.exists() and target.stat().st_size > 0:
+            skipped_count += 1
+            continue
+        if limit is not None and len(converted) >= limit:
+            continue
+
         cleaned = clean_vtt_text(vtt.read_text(encoding="utf-8", errors="ignore"))
-        target = output_dir / (vtt.stem + ".txt")
         target.write_text(cleaned + "\n", encoding="utf-8")
         converted.append(target)
 
-    return converted
+    return converted, skipped_count
 
 
-def write_log(run_id: str, input_dir: Path, output_dir: Path, vtt_count: int, processed_count: int) -> Path:
+def write_log(run_id: str, input_dir: Path, output_dir: Path, vtt_count: int, processed_count: int, skipped_count: int, limit: int | None) -> Path:
     log_path = output_dir.parent / "transcript-conversion-log.md"
     lines = []
     lines.append("# YTM Transcript Conversion Log")
@@ -60,6 +71,8 @@ def write_log(run_id: str, input_dir: Path, output_dir: Path, vtt_count: int, pr
     lines.append("Output folder: " + str(output_dir))
     lines.append("VTT file count: " + str(vtt_count))
     lines.append("Processed file count: " + str(processed_count))
+    lines.append("Skipped existing count: " + str(skipped_count))
+    lines.append("Processing limit: " + (str(limit) if limit is not None else "all"))
     lines.append("")
     lines.append("Note: cleaned TXT transcripts are derived runtime data and must not be committed.")
     lines.append("Note: no AI, model, or radar-card processing has been performed yet.")
@@ -87,13 +100,14 @@ def main() -> None:
     if not vtt_files:
         raise SystemExit("No VTT files found in source transcripts folder: " + str(input_dir))
 
-    selected = vtt_files[:args.limit] if args.limit is not None else vtt_files
-    converted = convert_files(selected, output_dir)
-    log_path = write_log(args.run_id, input_dir, output_dir, len(vtt_files), len(converted))
+    converted, skipped_count = convert_files(vtt_files, output_dir, args.limit)
+    log_path = write_log(args.run_id, input_dir, output_dir, len(vtt_files), len(converted), skipped_count, args.limit)
 
     print("TRANSCRIPT CONVERSION", output_dir)
     print("VTT file count:", len(vtt_files))
     print("Processed file count:", len(converted))
+    print("Skipped existing count:", skipped_count)
+    print("Processing limit:", args.limit if args.limit is not None else "all")
     print("Wrote:", log_path)
     print("Safety: cleaned TXT transcripts are local-only derived runtime data. Do not commit.")
 

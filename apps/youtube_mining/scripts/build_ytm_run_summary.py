@@ -58,8 +58,6 @@ def final_status(run_dir: Path) -> str:
         run_dir / "derived" / "radar_cards" / "radar-card-validation-report.md",
         ["Radar-card count", "Passed count", "Warning count", "Failed count"],
     )
-    smoke = read_key_values(run_dir / "handoffs" / "ytm_pipeline_smoke_report.md", ["Final status"])
-
     if validation:
         failed = int(validation.get("Failed count", "0") or "0")
         warnings = int(validation.get("Warning count", "0") or "0")
@@ -70,9 +68,6 @@ def final_status(run_dir: Path) -> str:
             return "warning"
         if passed > 0:
             return "pass"
-
-    if smoke.get("Final status") == "pass":
-        return "pass"
 
     return "incomplete"
 
