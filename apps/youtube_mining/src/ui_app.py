@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 import re
 import subprocess
 import sys
@@ -15,14 +16,14 @@ ALLOWED_SOURCE_EXTENSIONS = {".md", ".txt", ".vtt", ".srt", ".json"}
 
 UI_TEXT = {
     "en": {
-        "title": "P3FE YouTube Mining v0.2",
-        "caption": "Safety-first local source adapter shell",
-        "intro": "Safety-first local YTM operator UI. Source/runtime content stays local-only and is not previewed as raw content.",
-        "operator_mode": "YTM Operator Mode",
-        "operator_caption": "Run one controlled YTM source intake. This is not channel-scale automation.",
+        "title": "P3FE YouTube Mining",
+        "caption": "Create a local, safe radar/handoff package from a YouTube source.",
+        "intro": "Public Source, Private Processing, Clean Output. Source/runtime content stays local-only.",
+        "operator_mode": "New YTM run",
+        "operator_caption": "Choose a source, keep the safety cap small, then start mining.",
         "source_section": "Source",
         "run_settings": "Run settings",
-        "operator_actions": "Operator actions",
+        "operator_actions": "Start",
         "safe_status": "Safe status",
         "advanced": "Advanced",
         "command_output": "Command output",
@@ -51,7 +52,9 @@ UI_TEXT = {
         "operator_limit": "Operator limit",
         "skip_model": "Skip model",
         "limit_caption": "Limit is the processing safety cap. Keep it small while validating list-file input.",
-        "run_pipeline": "Run YTM pipeline",
+        "run_pipeline": "Start mining",
+        "cookie_option": "Use browser cookies",
+        "cookie_unwired": "Cookie handling is not wired yet.",
         "source_required": "ERROR source input is required.",
         "targeted_required": "ERROR targeted video list is required.",
         "summary_available": "YTM run summary: available",
@@ -61,12 +64,13 @@ UI_TEXT = {
         "output_available": "Output folder: available",
         "open_finder": "Open output folder in Finder",
         "output_missing": "output folder not found yet",
-        "runtime_safety": "Runtime boundary and safety",
+        "runtime_safety": "Safety audit",
         "runtime_boundary": "Runtime boundary",
         "runtime_note": "Runtime output is local-only and ignored by git.",
         "safety_status": "Safety status",
         "run_safety_audit": "Run safety audit",
-        "local_runs": "Local YTM runs",
+        "local_runs": "Previous local YTM runs",
+        "local_runs_help": "Previous local run folders. Useful only for checking or continuing older runs.",
         "run_count": "Run count:",
         "selected_run": "Selected run",
         "no_runs": "No local runs found.",
@@ -82,6 +86,7 @@ UI_TEXT = {
         "url_required": "ERROR YouTube URL or video ID is required.",
         "safe_preview": "YTM safe final summary preview",
         "manual_controls": "Optional manual controls",
+        "advanced_help": "Diagnostics and manual tools. Not needed for normal use.",
         "create_run": "Create local run folder",
         "run_id": "Run ID",
         "create_run_folder": "Create run folder",
@@ -112,14 +117,14 @@ UI_TEXT = {
         "limitations_text": "- Not production service\n- No channel-scale automation\n- No RR / Reddit Radar implementation yet\n- Runtime/source content stays local-only\n- Local model output is not source of truth",
     },
     "hu": {
-        "title": "P3FE YouTube Mining v0.2",
-        "caption": "Biztonságos, helyi forrásadapter",
-        "intro": "Biztonságos helyi YTM operátori felület. A forrás- és runtime tartalom lokális marad, nyers tartalomként nem jelenik meg.",
-        "operator_mode": "YTM Operátori mód",
-        "operator_caption": "Egy kontrollált YTM forrásfuttatás indítása. Ez nem csatornaszintű automatizálás.",
+        "title": "P3FE YouTube Mining",
+        "caption": "YouTube forrásból helyi, biztonságos radar/handoff csomagot készít.",
+        "intro": "Public Source, Private Processing, Clean Output. A forrás- és runtime tartalom lokális marad.",
+        "operator_mode": "Új YTM futás",
+        "operator_caption": "Válassz forrást, tartsd kicsin a biztonsági limitet, majd indítsd a bányászást.",
         "source_section": "Forrás",
         "run_settings": "Futási beállítások",
-        "operator_actions": "Műveletek",
+        "operator_actions": "Indítás",
         "safe_status": "Biztonságos státusz",
         "advanced": "Haladó",
         "command_output": "Parancskimenet",
@@ -148,7 +153,9 @@ UI_TEXT = {
         "operator_limit": "Operátori limit",
         "skip_model": "Modell kihagyása",
         "limit_caption": "A limit a feldolgozási biztonsági sapka. Listafájl tesztnél maradjon kicsi.",
-        "run_pipeline": "YTM pipeline indítása",
+        "run_pipeline": "Bányászás indítása",
+        "cookie_option": "Böngésző cookie használata",
+        "cookie_unwired": "Cookie kezelés nincs még bekötve.",
         "source_required": "HIBA: forrásbemenet szükséges.",
         "targeted_required": "HIBA: célzott videólista szükséges.",
         "summary_available": "YTM run summary: elérhető",
@@ -158,12 +165,13 @@ UI_TEXT = {
         "output_available": "Kimeneti mappa: elérhető",
         "open_finder": "Kimeneti mappa megnyitása Finderben",
         "output_missing": "kimeneti mappa még nem található",
-        "runtime_safety": "Runtime határ és biztonság",
+        "runtime_safety": "Biztonsági státusz",
         "runtime_boundary": "Runtime határ",
         "runtime_note": "A runtime output lokális és git által ignorált.",
         "safety_status": "Biztonsági státusz",
         "run_safety_audit": "Safety audit futtatása",
-        "local_runs": "Helyi YTM futások",
+        "local_runs": "Korábbi helyi YTM futások",
+        "local_runs_help": "Korábbi helyi run mappák. Régi futások ellenőrzésére vagy folytatására hasznos.",
         "run_count": "Run darabszám:",
         "selected_run": "Kiválasztott run",
         "no_runs": "Nincs helyi run.",
@@ -179,6 +187,7 @@ UI_TEXT = {
         "url_required": "HIBA: YouTube URL vagy video ID szükséges.",
         "safe_preview": "YTM biztonságos végső összefoglaló előnézet",
         "manual_controls": "Opcionális manuális vezérlők",
+        "advanced_help": "Diagnosztika és manuális eszközök. Normál használathoz nem szükséges.",
         "create_run": "Helyi run mappa létrehozása",
         "run_id": "Run ID",
         "create_run_folder": "Run mappa létrehozása",
@@ -232,6 +241,26 @@ def safe_run_id(value: str) -> str:
     value = re.sub(r"[^a-z0-9._-]+", "-", value)
     value = re.sub(r"-+", "-", value)
     return value.strip("-") or "run"
+
+def source_slug(value: str, fallback: str = "youtube") -> str:
+    value = value.strip()
+    match = re.search(r"@([^/?#]+)", value)
+    if match:
+        value = match.group(1)
+    elif value:
+        value = value.rstrip("/").split("/")[-1]
+    return safe_run_id(value or fallback)
+
+def suggested_run_id(source_value: str, input_mode: str, select_mode: str) -> str:
+    iso = datetime.now().isocalendar()
+    week_slug = f"{iso.year % 100:02d}w{iso.week:02d}"
+    mode_slug = {
+        "single": "single",
+        "list-file": "list",
+        "targeted-list": "targeted",
+    }.get(input_mode, "run")
+    select_slug = select_mode.replace("-", "")
+    return safe_run_id("-".join([source_slug(source_value, mode_slug), mode_slug, select_slug, week_slug]))
 
 def list_runs():
     if not OUTPUT_ROOT.exists():
@@ -383,55 +412,35 @@ st.caption(tr("operator_caption"))
 
 available_runs = list_runs()
 
-st.markdown("#### " + tr("source_section"))
-operator_input_mode = st.radio(
-    tr("operator_source_input"),
-    ["single", "list-file", "targeted-list"],
-    horizontal=True,
-    format_func=lambda value: {
-        "single": tr("single_input"),
-        "list-file": tr("list_file_input"),
-        "targeted-list": tr("targeted_input"),
-    }[value],
-    key="operator_input_mode",
-)
+operator_box = st.container()
+with operator_box:
+    st.markdown("#### " + tr("source_section"))
+    operator_input_mode = st.radio(
+        tr("operator_source_input"),
+        ["single", "targeted-list", "list-file"],
+        horizontal=True,
+        format_func=lambda value: {
+            "single": tr("single_input"),
+            "list-file": tr("list_file_input"),
+            "targeted-list": tr("targeted_input"),
+        }[value],
+        key="operator_input_mode",
+    )
 
-operator_url = ""
-operator_list_file = ""
-operator_targeted_list = ""
-if operator_input_mode == "single":
-    operator_url = st.text_input(tr("operator_url"), key="operator_url")
-elif operator_input_mode == "list-file":
-    operator_list_file = st.text_input(tr("operator_list_file"), key="operator_list_file")
-    st.caption(tr("list_file_caption"))
-else:
-    operator_targeted_list = st.text_area(tr("operator_targeted_list"), height=140, key="operator_targeted_list")
-    st.caption(tr("targeted_caption"))
-
-st.markdown("#### " + tr("run_settings"))
-run_type = st.radio(
-    tr("run_type"),
-    ["new", "existing"],
-    horizontal=True,
-    format_func=lambda value: tr("new_run") if value == "new" else tr("existing_run"),
-    key="operator_run_type",
-)
-
-settings_col0, settings_col1, settings_col2, settings_col3 = st.columns([1.4, 1, 0.7, 0.7])
-with settings_col0:
-    if run_type == "existing" and available_runs:
-        operator_run_id = st.selectbox(tr("operator_run_id"), available_runs, index=len(available_runs) - 1, key="operator_existing_run_id")
+    operator_url = ""
+    operator_list_file = ""
+    operator_targeted_list = ""
+    if operator_input_mode == "single":
+        operator_url = st.text_input(tr("operator_url"), key="operator_url")
+    elif operator_input_mode == "list-file":
+        operator_list_file = st.text_input(tr("operator_list_file"), key="operator_list_file")
+        st.caption(tr("list_file_caption"))
     else:
-        operator_run_id = st.text_input(tr("operator_run_id"), value="ytm-operator-001", key="operator_run_id")
-with settings_col1:
-    operator_model = st.text_input(tr("operator_model"), value="qwen2.5:7b", key="operator_model")
-with settings_col2:
-    operator_limit = st.number_input(tr("operator_limit"), min_value=1, value=1, step=1, key="operator_limit")
-with settings_col3:
-    operator_skip_model = st.checkbox(tr("skip_model"), value=False, key="operator_skip_model")
+        operator_targeted_list = st.text_area(tr("operator_targeted_list"), height=120, key="operator_targeted_list")
+        st.caption(tr("targeted_caption"))
 
-option_col1, option_col2 = st.columns(2)
-with option_col1:
+    st.markdown("#### " + tr("run_settings"))
+    option_col1, option_col2, option_col3 = st.columns([1, 1, 0.6])
     operator_langs = st.selectbox(
         tr("subtitle_language"),
         ["hu", "en", "hu,en"],
@@ -439,22 +448,51 @@ with option_col1:
         format_func=lambda value: {"hu": tr("lang_hu"), "en": tr("lang_en"), "hu,en": tr("lang_hu_en")}[value],
         key="operator_langs",
     )
-with option_col2:
-    operator_select_mode = st.selectbox(
-        tr("selection_mode"),
-        ["all", "latest-5", "oldest-5"],
-        index=0,
-        format_func=lambda value: {
-            "all": tr("select_all"),
-            "latest-5": tr("select_latest"),
-            "oldest-5": tr("select_oldest"),
-        }[value],
-        key="operator_select_mode",
-    )
-st.caption(tr("limit_caption"))
+    with option_col2:
+        operator_select_mode = st.selectbox(
+            tr("selection_mode"),
+            ["all", "latest-5", "oldest-5"],
+            index=0,
+            format_func=lambda value: {
+                "all": tr("select_all"),
+                "latest-5": tr("select_latest"),
+                "oldest-5": tr("select_oldest"),
+            }[value],
+            key="operator_select_mode",
+        )
+    with option_col3:
+        operator_limit = st.number_input(tr("operator_limit"), min_value=1, value=1, step=1, key="operator_limit")
 
-st.markdown("#### " + tr("operator_actions"))
-if st.button(tr("run_pipeline"), key="operator_run_pipeline"):
+    run_type = st.radio(
+        tr("run_type"),
+        ["new", "existing"],
+        horizontal=True,
+        format_func=lambda value: tr("new_run") if value == "new" else tr("existing_run"),
+        key="operator_run_type",
+    )
+
+    targeted_first_line = operator_targeted_list.splitlines()[0] if operator_targeted_list.strip() else ""
+    source_for_name = operator_url or operator_list_file or targeted_first_line
+    suggested_name = suggested_run_id(source_for_name, operator_input_mode, operator_select_mode)
+    settings_col0, settings_col1, settings_col2 = st.columns([1.4, 1, 0.7])
+    with settings_col0:
+        if run_type == "existing" and available_runs:
+            operator_run_id = st.selectbox(tr("operator_run_id"), available_runs, index=len(available_runs) - 1, key="operator_existing_run_id")
+        else:
+            operator_run_id = st.text_input(tr("operator_run_id"), value=suggested_name, key="operator_run_id")
+    with settings_col1:
+        operator_model = st.text_input(tr("operator_model"), value="qwen2.5:7b", key="operator_model")
+    with settings_col2:
+        operator_skip_model = st.checkbox(tr("skip_model"), value=False, key="operator_skip_model")
+
+    st.checkbox(tr("cookie_option"), value=False, disabled=True, key="operator_cookie_disabled")
+    st.caption(tr("cookie_unwired"))
+    st.caption(tr("limit_caption"))
+
+    st.markdown("#### " + tr("operator_actions"))
+    start_clicked = st.button(tr("run_pipeline"), key="operator_run_pipeline", type="primary")
+
+if start_clicked:
     operator_source_value = operator_url.strip() if operator_input_mode == "single" else operator_list_file.strip()
     source_flag = "--url" if operator_input_mode == "single" else "--list-file"
     if operator_input_mode == "targeted-list":
@@ -512,6 +550,7 @@ with st.expander(tr("output_folder")):
         st.write(tr("output_missing"))
 
 st.subheader(tr("advanced"))
+st.caption(tr("advanced_help"))
 
 with st.expander(tr("runtime_safety")):
     st.subheader(tr("runtime_boundary"))
@@ -523,18 +562,18 @@ with st.expander(tr("runtime_safety")):
     if st.session_state.safety_audit_output:
         st.code(st.session_state.safety_audit_output)
 
-st.subheader(tr("local_runs"))
+with st.expander(tr("local_runs")):
+    st.caption(tr("local_runs_help"))
+    runs = list_runs()
+    if runs:
+        st.write(tr("run_count"), len(runs))
+        selected_run = st.selectbox(tr("selected_run"), runs, index=len(runs) - 1, key="selected_run")
+    else:
+        st.write(tr("no_runs"))
+        selected_run = ""
 
-runs = list_runs()
-if runs:
-    st.write(tr("run_count"), len(runs))
-    selected_run = st.selectbox(tr("selected_run"), runs, index=len(runs) - 1, key="selected_run")
-else:
-    st.write(tr("no_runs"))
-    selected_run = ""
-
-if selected_run:
-    with st.expander(tr("selected_run_status")):
+    if selected_run:
+        st.subheader(tr("selected_run_status"))
         st.table([
             {"path": relative_path, "status": "available" if path.exists() else "missing"}
             for relative_path, path in run_summary_files(selected_run)
@@ -548,6 +587,9 @@ if selected_run:
                 "| warnings " + counts.get("Warning count", "not available"),
                 "| failed " + counts.get("Failed count", "not available"),
             )
+
+if "selected_run" not in locals():
+    selected_run = ""
 
 with st.expander(tr("legacy_url")):
     url_pipeline_run_id = st.text_input(tr("url_run_id"), value="ytm-ui-url-test-001", key="url_pipeline_run_id")
