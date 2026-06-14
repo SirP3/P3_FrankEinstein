@@ -166,36 +166,33 @@ st.title("P3FE YouTube Mining v0.2")
 st.caption("Safety-first local source adapter shell")
 st.info("Safety-first local YTM operator UI. Source/runtime content stays local-only and is not previewed as raw content.")
 
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("Runtime boundary")
-    st.code(str(OUTPUT_ROOT))
-    st.write("Runtime output is local-only and ignored by git.")
-
-with col2:
-    st.subheader("Safety status")
-    if st.button("Run safety audit"):
-        st.session_state.safety_audit_output = run_command(["python3", "scripts/safety/public_safety_audit.py"])
-    if st.session_state.safety_audit_output:
-        st.code(st.session_state.safety_audit_output)
-
 st.subheader("YTM Operator Mode")
-st.caption("Single-source or local list-file source intake. This is not channel-scale automation.")
-operator_run_id = st.text_input("Operator run ID", value="ytm-operator-001")
-operator_input_mode = st.radio("Operator source input", ["Single URL/video ID", "List-file path"], horizontal=True)
+st.caption("Run one controlled YTM source intake. This is not channel-scale automation.")
+
+run_col, source_col = st.columns([1, 2])
+with run_col:
+    operator_run_id = st.text_input("Operator run ID", value="ytm-operator-001", key="operator_run_id")
+with source_col:
+    operator_input_mode = st.radio("Operator source input", ["Single URL/video ID", "List-file path"], horizontal=True, key="operator_input_mode")
+
 operator_url = ""
 operator_list_file = ""
 if operator_input_mode == "Single URL/video ID":
-    operator_url = st.text_input("Operator YouTube URL or video ID")
+    operator_url = st.text_input("Operator YouTube URL or video ID", key="operator_url")
 else:
-    operator_list_file = st.text_input("Operator list-file path")
+    operator_list_file = st.text_input("Operator list-file path", key="operator_list_file")
     st.caption("Use a local-only text file path. File content is not previewed in the UI.")
-operator_model = st.text_input("Operator model", value="qwen2.5:7b")
-operator_limit = st.number_input("Operator limit", min_value=1, value=1, step=1)
+
+settings_col1, settings_col2, settings_col3 = st.columns(3)
+with settings_col1:
+    operator_model = st.text_input("Operator model", value="qwen2.5:7b", key="operator_model")
+with settings_col2:
+    operator_limit = st.number_input("Operator limit", min_value=1, value=1, step=1, key="operator_limit")
+with settings_col3:
+    operator_skip_model = st.checkbox("Skip model", value=False, key="operator_skip_model")
 st.caption("Limit is the processing safety cap. Keep it small while validating list-file input.")
-operator_skip_model = st.checkbox("Operator skip model", value=False)
-if st.button("Run YTM pipeline"):
+
+if st.button("Run YTM pipeline", key="operator_run_pipeline"):
     operator_source_value = operator_url.strip() if operator_input_mode == "Single URL/video ID" else operator_list_file.strip()
     if operator_source_value:
         command = [
@@ -225,183 +222,194 @@ if operator_summary.exists():
 else:
     st.write("YTM run summary: not available yet")
 
-st.write("Resume / skip-existing status")
-st.table([{"field": key, "value": value} for key, value in operator_resume_status(operator_run_id).items()])
+with st.expander("Resume / skip-existing status"):
+    st.table([{"field": key, "value": value} for key, value in operator_resume_status(operator_run_id).items()])
 
 operator_output_folder = run_output_folder(operator_run_id)
-st.write("Output folder")
-st.code(str(operator_output_folder))
-if operator_output_folder.exists():
-    st.write("Output folder: available")
-    if sys.platform == "darwin" and st.button("Open output folder in Finder"):
-        subprocess.run(["open", str(operator_output_folder)], check=False)
-else:
-    st.write("output folder not found yet")
+with st.expander("Output folder"):
+    st.code(str(operator_output_folder))
+    if operator_output_folder.exists():
+        st.write("Output folder: available")
+        if sys.platform == "darwin" and st.button("Open output folder in Finder", key="operator_open_output_folder"):
+            subprocess.run(["open", str(operator_output_folder)], check=False)
+    else:
+        st.write("output folder not found yet")
+
+with st.expander("Runtime boundary and safety"):
+    st.subheader("Runtime boundary")
+    st.code(str(OUTPUT_ROOT))
+    st.write("Runtime output is local-only and ignored by git.")
+    st.subheader("Safety status")
+    if st.button("Run safety audit", key="run_safety_audit"):
+        st.session_state.safety_audit_output = run_command(["python3", "scripts/safety/public_safety_audit.py"])
+    if st.session_state.safety_audit_output:
+        st.code(st.session_state.safety_audit_output)
 
 st.subheader("Local YTM runs")
 
 runs = list_runs()
 if runs:
     st.write("Run count:", len(runs))
-    selected_run = st.selectbox("Selected run", runs, index=len(runs) - 1)
+    selected_run = st.selectbox("Selected run", runs, index=len(runs) - 1, key="selected_run")
 else:
     st.write("No local runs found.")
     selected_run = ""
 
 if selected_run:
-    st.subheader("Run summary")
-    st.table([
-        {"path": relative_path, "status": "available" if path.exists() else "missing"}
-        for relative_path, path in run_summary_files(selected_run)
-    ])
-    counts = validation_counts(selected_run)
-    if counts:
-        st.write(
-            "Radar-card validation:",
-            "count " + counts.get("Radar-card count", "not available"),
-            "| passed " + counts.get("Passed count", "not available"),
-            "| warnings " + counts.get("Warning count", "not available"),
-            "| failed " + counts.get("Failed count", "not available"),
-        )
+    with st.expander("Selected run status"):
+        st.table([
+            {"path": relative_path, "status": "available" if path.exists() else "missing"}
+            for relative_path, path in run_summary_files(selected_run)
+        ])
+        counts = validation_counts(selected_run)
+        if counts:
+            st.write(
+                "Radar-card validation:",
+                "count " + counts.get("Radar-card count", "not available"),
+                "| passed " + counts.get("Passed count", "not available"),
+                "| warnings " + counts.get("Warning count", "not available"),
+                "| failed " + counts.get("Failed count", "not available"),
+            )
 
-st.subheader("Run full pipeline from YouTube URL")
-url_pipeline_run_id = st.text_input("URL pipeline run ID", value="ytm-ui-url-test-001")
-url_pipeline_input = st.text_input("URL pipeline YouTube URL or video ID")
-url_pipeline_model = st.text_input("URL pipeline model", value="qwen2.5:7b")
-url_pipeline_limit = st.number_input("URL pipeline limit", min_value=1, value=1, step=1)
-url_pipeline_skip_model = st.checkbox("URL pipeline skip model", value=False)
-if st.button("Run URL pipeline"):
-    if url_pipeline_input.strip():
-        command = [
-            "python3",
-            "apps/youtube_mining/scripts/run_ytm_url_pipeline.py",
-            url_pipeline_run_id,
-            "--url",
-            url_pipeline_input.strip(),
-            "--model",
-            url_pipeline_model.strip() or "qwen2.5:7b",
-            "--limit",
-            str(int(url_pipeline_limit)),
-        ]
-        if url_pipeline_skip_model:
-            command.append("--skip-model")
-        st.session_state.url_pipeline_output = run_command(command)
-    else:
-        st.session_state.url_pipeline_output = "ERROR YouTube URL or video ID is required."
-
-if st.session_state.url_pipeline_output:
-    st.code(st.session_state.url_pipeline_output)
-
-url_pipeline_preview = safe_summary_preview(url_pipeline_run_id)
-st.write("YTM safe final summary preview")
-st.table([{"field": key, "value": value} for key, value in url_pipeline_preview.items()])
-
-st.subheader("Create local run folder")
-run_id = st.text_input("Run ID", value="ui-smoke-test-001")
-if st.button("Create run folder"):
-    st.session_state.create_run_output = run_command(["python3", "apps/youtube_mining/scripts/create_run_folder.py", run_id])
-    st.rerun()
-if st.session_state.create_run_output:
-    st.code(st.session_state.create_run_output)
-
-st.subheader("YouTube source intake")
-if selected_run:
-    youtube_input = st.text_input("YouTube URL or video ID")
-    if st.button("Add YouTube source"):
-        if youtube_input.strip():
-            st.session_state.youtube_intake_output = run_command([
+with st.expander("Legacy URL pipeline control"):
+    url_pipeline_run_id = st.text_input("URL pipeline run ID", value="ytm-ui-url-test-001", key="url_pipeline_run_id")
+    url_pipeline_input = st.text_input("URL pipeline YouTube URL or video ID", key="url_pipeline_input")
+    url_pipeline_model = st.text_input("URL pipeline model", value="qwen2.5:7b", key="url_pipeline_model")
+    url_pipeline_limit = st.number_input("URL pipeline limit", min_value=1, value=1, step=1, key="url_pipeline_limit")
+    url_pipeline_skip_model = st.checkbox("URL pipeline skip model", value=False, key="url_pipeline_skip_model")
+    if st.button("Run URL pipeline", key="url_pipeline_run_button"):
+        if url_pipeline_input.strip():
+            command = [
                 "python3",
-                "apps/youtube_mining/scripts/intake_youtube_source.py",
-                selected_run,
+                "apps/youtube_mining/scripts/run_ytm_url_pipeline.py",
+                url_pipeline_run_id,
                 "--url",
-                youtube_input.strip(),
-            ])
-            st.rerun()
+                url_pipeline_input.strip(),
+                "--model",
+                url_pipeline_model.strip() or "qwen2.5:7b",
+                "--limit",
+                str(int(url_pipeline_limit)),
+            ]
+            if url_pipeline_skip_model:
+                command.append("--skip-model")
+            st.session_state.url_pipeline_output = run_command(command)
         else:
-            st.session_state.youtube_intake_output = "ERROR YouTube URL or video ID is required."
-if st.session_state.youtube_intake_output:
-    st.code(st.session_state.youtube_intake_output)
+            st.session_state.url_pipeline_output = "ERROR YouTube URL or video ID is required."
 
-st.subheader("Manual source intake")
-if selected_run:
-    uploaded = st.file_uploader("Add one local-only source file to selected run", type=["md", "txt", "vtt", "srt", "json"])
-    if uploaded is not None and st.button("Save uploaded source to selected run"):
-        try:
-            target = write_uploaded_source(selected_run, uploaded)
-            st.session_state.upload_output = "SAVED " + str(target)
-            st.rerun()
-        except Exception as exc:
-            st.session_state.upload_output = "ERROR " + str(exc)
-if st.session_state.upload_output:
-    st.code(st.session_state.upload_output)
+    if st.session_state.url_pipeline_output:
+        st.code(st.session_state.url_pipeline_output)
 
-if selected_run:
-    st.subheader("Source status")
-    files = source_files(selected_run)
-    st.write("Selected run:", selected_run)
-    st.write("Source file count:", len(files))
-    if files:
-        for file in files:
-            st.write("-", file.relative_to(OUTPUT_ROOT / selected_run))
-    else:
-        st.write("No source files in this run yet.")
+    url_pipeline_preview = safe_summary_preview(url_pipeline_run_id)
+    st.write("YTM safe final summary preview")
+    st.table([{"field": key, "value": value} for key, value in url_pipeline_preview.items()])
 
-st.subheader("Derived placeholder")
-if selected_run:
-    if st.button("Build derived placeholder"):
-        st.session_state.derived_output = run_command(["python3", "apps/youtube_mining/scripts/build_derived_placeholder.py", selected_run])
-    if "derived_output" in st.session_state and st.session_state.derived_output:
-        st.code(st.session_state.derived_output)
+with st.expander("Optional manual controls"):
+    st.subheader("Create local run folder")
+    run_id = st.text_input("Run ID", value="ui-smoke-test-001", key="manual_run_id")
+    if st.button("Create run folder", key="manual_create_run_folder"):
+        st.session_state.create_run_output = run_command(["python3", "apps/youtube_mining/scripts/create_run_folder.py", run_id])
+        st.rerun()
+    if st.session_state.create_run_output:
+        st.code(st.session_state.create_run_output)
 
-st.subheader("Operator brief placeholder")
-if selected_run:
-    if st.button("Build operator brief placeholder"):
-        st.session_state.operator_brief_output = run_command(["python3", "apps/youtube_mining/scripts/build_operator_brief_placeholder.py", selected_run])
-    if st.session_state.operator_brief_output:
-        st.code(st.session_state.operator_brief_output)
+    st.subheader("YouTube source intake")
+    if selected_run:
+        youtube_input = st.text_input("YouTube URL or video ID", key="manual_youtube_input")
+        if st.button("Add YouTube source", key="manual_add_youtube_source"):
+            if youtube_input.strip():
+                st.session_state.youtube_intake_output = run_command([
+                    "python3",
+                    "apps/youtube_mining/scripts/intake_youtube_source.py",
+                    selected_run,
+                    "--url",
+                    youtube_input.strip(),
+                ])
+                st.rerun()
+            else:
+                st.session_state.youtube_intake_output = "ERROR YouTube URL or video ID is required."
+    if st.session_state.youtube_intake_output:
+        st.code(st.session_state.youtube_intake_output)
 
-    brief = operator_brief_path(selected_run)
-    if brief.exists():
-        st.write("Operator brief: available")
-        st.write("handoffs/operator_brief.md")
-        st.markdown(brief.read_text(encoding="utf-8", errors="ignore"))
-    else:
-        st.write("Operator brief: not available yet")
+    st.subheader("Manual source intake")
+    if selected_run:
+        uploaded = st.file_uploader("Add one local-only source file to selected run", type=["md", "txt", "vtt", "srt", "json"], key="manual_source_upload")
+        if uploaded is not None and st.button("Save uploaded source to selected run", key="manual_save_source_upload"):
+            try:
+                target = write_uploaded_source(selected_run, uploaded)
+                st.session_state.upload_output = "SAVED " + str(target)
+                st.rerun()
+            except Exception as exc:
+                st.session_state.upload_output = "ERROR " + str(exc)
+    if st.session_state.upload_output:
+        st.code(st.session_state.upload_output)
 
-st.subheader("Full pipeline smoke test")
-if selected_run:
-    smoke_model = st.text_input("Smoke model", value="qwen2.5:7b")
-    smoke_limit = st.number_input("Smoke limit", min_value=1, value=1, step=1)
-    smoke_skip_model = st.checkbox("Skip model", value=False)
-    if st.button("Run full pipeline smoke"):
-        command = [
-            "python3",
-            "apps/youtube_mining/scripts/run_ytm_pipeline_smoke.py",
-            selected_run,
-            "--model",
-            smoke_model.strip() or "qwen2.5:7b",
-            "--limit",
-            str(int(smoke_limit)),
-        ]
-        if smoke_skip_model:
-            command.append("--skip-model")
-        st.session_state.pipeline_smoke_output = run_command(command)
+    if selected_run:
+        st.subheader("Source status")
+        files = source_files(selected_run)
+        st.write("Selected run:", selected_run)
+        st.write("Source file count:", len(files))
+        if files:
+            for file in files:
+                st.write("-", file.relative_to(OUTPUT_ROOT / selected_run))
+        else:
+            st.write("No source files in this run yet.")
 
-    if st.session_state.pipeline_smoke_output:
-        st.code(st.session_state.pipeline_smoke_output)
+    st.subheader("Derived placeholder")
+    if selected_run:
+        if st.button("Build derived placeholder", key="manual_build_derived_placeholder"):
+            st.session_state.derived_output = run_command(["python3", "apps/youtube_mining/scripts/build_derived_placeholder.py", selected_run])
+        if "derived_output" in st.session_state and st.session_state.derived_output:
+            st.code(st.session_state.derived_output)
 
-    smoke_report = pipeline_smoke_report_path(selected_run)
-    if smoke_report.exists():
-        st.write("Pipeline smoke report: available")
-        st.write("handoffs/ytm_pipeline_smoke_report.md")
-    else:
-        st.write("Pipeline smoke report: not available yet")
+    st.subheader("Operator brief placeholder")
+    if selected_run:
+        if st.button("Build operator brief placeholder", key="manual_build_operator_brief"):
+            st.session_state.operator_brief_output = run_command(["python3", "apps/youtube_mining/scripts/build_operator_brief_placeholder.py", selected_run])
+        if st.session_state.operator_brief_output:
+            st.code(st.session_state.operator_brief_output)
 
-st.subheader("Workspace dashboard")
-if st.button("Run workspace dashboard"):
-    st.session_state.workspace_dashboard_output = run_command(["python3", "scripts/status_dashboard.py"])
-if st.session_state.workspace_dashboard_output:
-    st.code(st.session_state.workspace_dashboard_output)
+        brief = operator_brief_path(selected_run)
+        if brief.exists():
+            st.write("Operator brief: available")
+            st.write("handoffs/operator_brief.md")
+            st.markdown(brief.read_text(encoding="utf-8", errors="ignore"))
+        else:
+            st.write("Operator brief: not available yet")
 
-st.subheader("Current limitations")
-st.markdown("- No YouTube download yet\n- No transcript processing yet\n- No local model call yet\n- No radar-card generation yet\n- No handoff generation yet")
+    st.subheader("Full pipeline smoke test")
+    if selected_run:
+        smoke_model = st.text_input("Smoke model", value="qwen2.5:7b", key="manual_smoke_model")
+        smoke_limit = st.number_input("Smoke limit", min_value=1, value=1, step=1, key="manual_smoke_limit")
+        smoke_skip_model = st.checkbox("Skip model", value=False, key="manual_smoke_skip_model")
+        if st.button("Run full pipeline smoke", key="manual_run_pipeline_smoke"):
+            command = [
+                "python3",
+                "apps/youtube_mining/scripts/run_ytm_pipeline_smoke.py",
+                selected_run,
+                "--model",
+                smoke_model.strip() or "qwen2.5:7b",
+                "--limit",
+                str(int(smoke_limit)),
+            ]
+            if smoke_skip_model:
+                command.append("--skip-model")
+            st.session_state.pipeline_smoke_output = run_command(command)
+
+        if st.session_state.pipeline_smoke_output:
+            st.code(st.session_state.pipeline_smoke_output)
+
+        smoke_report = pipeline_smoke_report_path(selected_run)
+        if smoke_report.exists():
+            st.write("Pipeline smoke report: available")
+            st.write("handoffs/ytm_pipeline_smoke_report.md")
+        else:
+            st.write("Pipeline smoke report: not available yet")
+
+    st.subheader("Workspace dashboard")
+    if st.button("Run workspace dashboard", key="manual_run_workspace_dashboard"):
+        st.session_state.workspace_dashboard_output = run_command(["python3", "scripts/status_dashboard.py"])
+    if st.session_state.workspace_dashboard_output:
+        st.code(st.session_state.workspace_dashboard_output)
+
+with st.expander("Current limitations"):
+    st.markdown("- Not production service\n- No channel-scale automation\n- No RR / Reddit Radar implementation yet\n- Runtime/source content stays local-only\n- Local model output is not source of truth")
