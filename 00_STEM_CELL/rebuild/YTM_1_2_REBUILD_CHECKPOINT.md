@@ -134,6 +134,7 @@ The Streamlit UI has a Run summary panel showing available/missing status for ke
 
 - `YTM Operator Mode` is implemented for running the URL pipeline from a Run ID plus YouTube URL/video ID.
 - Safe final summary preview is implemented in the Streamlit UI.
+- The Operator UI now shows the selected run output folder path and, on macOS, can open that folder in Finder.
 - The preview is status/summary-oriented and must not expose source transcript content, cleaned TXT content, model packet content, full radar-card content, or long runtime reports.
 - Public safety audit passed before push.
 - `origin/main` is updated at `498fad0 Add safe YTM summary preview to UI`.
@@ -162,6 +163,7 @@ Public Source, Private Processing, Clean Output.
 - UI URL pipeline control exists.
 - UI Operator Mode exists.
 - Safe final summary preview exists.
+- Output folder path/Finder helper exists.
 - Final YTM run summary exists.
 - Local radar-card generation works.
 - Radar-card validation can pass.
