@@ -117,6 +117,15 @@ The Streamlit UI also includes a compact `YTM Operator Mode` panel.
 - Policy confirmation: runtime outputs stay under `output/youtube_mining/`.
 - Limitation: this is a core pipeline baseline, not full production UI, not batch/channel processing, not RR/Reddit Radar.
 
+## List-file Smoke Acceptance
+
+- Acceptance run: `ytm-list-file-smoke-001`
+- Input mode: local ignored list-file
+- Source intake selected two video IDs/URLs.
+- Downstream transcript processing respected `--limit 1`.
+- Smoke was run with `--skip-model`; an incomplete final summary status is expected in this lightweight mode.
+- Runtime/source artifacts stayed under ignored local paths.
+
 ## Current UI Run Summary
 
 The Streamlit UI has a Run summary panel showing available/missing status for key runtime outputs:
