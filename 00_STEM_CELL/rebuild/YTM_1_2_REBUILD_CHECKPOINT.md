@@ -130,6 +130,14 @@ The Streamlit UI has a Run summary panel showing available/missing status for ke
 - `handoffs/ytm_pipeline_smoke_report.md`
 - `handoffs/ytm_run_summary.md`
 
+## Latest UI Catch-up
+
+- `YTM Operator Mode` is implemented for running the URL pipeline from a Run ID plus YouTube URL/video ID.
+- Safe final summary preview is implemented in the Streamlit UI.
+- The preview is status/summary-oriented and must not expose source transcript content, cleaned TXT content, model packet content, full radar-card content, or long runtime reports.
+- Public safety audit passed before push.
+- `origin/main` is updated at `498fad0 Add safe YTM summary preview to UI`.
+
 The UI must not display:
 
 - source transcript content
@@ -153,18 +161,21 @@ Public Source, Private Processing, Clean Output.
 - One-command URL pipeline works.
 - UI URL pipeline control exists.
 - UI Operator Mode exists.
+- Safe final summary preview exists.
 - Final YTM run summary exists.
 - Local radar-card generation works.
 - Radar-card validation can pass.
 - UI run summary panel exists.
 - Public GitHub baseline exists.
+- Public push status: `origin/main` updated.
 - Tag exists: `ytm-core-baseline-accepted-001`.
 - Batch/channel processing is not implemented.
 - RR / Reddit Radar is not started yet.
 
 ## Next Likely Steps
 
-- UI wiring for later pipeline stages.
-- Run summary / operator dashboard.
+- Continue YTM v1.2 catch-up phase.
+- Tighten operator usability around run selection, status, and safe previews.
+- Keep runtime/source content local-only while improving public-safe documentation.
 - Docs cleanup.
 - Later RR adapter after YTM baseline stabilizes.
