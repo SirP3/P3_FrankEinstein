@@ -107,6 +107,7 @@ def main() -> None:
     parser.add_argument("--model", default="qwen2.5:7b")
     parser.add_argument("--skip-model", action="store_true")
     parser.add_argument("--limit", type=int, default=1)
+    parser.add_argument("--langs", default="hu,en")
     args = parser.parse_args()
 
     if args.limit < 1:
@@ -118,7 +119,7 @@ def main() -> None:
     required_stages = [
         ("build derived placeholder", "build_derived_placeholder.py", [args.run_id]),
         ("build operator brief placeholder", "build_operator_brief_placeholder.py", [args.run_id]),
-        ("download transcript", "download_youtube_transcripts.py", [args.run_id, "--limit", str(args.limit)]),
+        ("download transcript", "download_youtube_transcripts.py", [args.run_id, "--langs", args.langs, "--limit", str(args.limit)]),
         ("convert VTT to TXT", "convert_vtt_to_txt.py", [args.run_id, "--limit", str(args.limit)]),
         ("build transcript index", "build_transcript_index.py", [args.run_id]),
         ("build model input manifest", "build_model_input_manifest.py", [args.run_id]),

@@ -121,7 +121,15 @@ def intake_from_list_file(list_file: Path) -> tuple[list[str], list[str]]:
     return ids, video_lines
 
 
-def write_source_files(source_dir: Path, ids: list[str], video_lines: list[str], mode: str, input_value: str) -> None:
+def apply_select_mode(ids: list[str], video_lines: list[str], select_mode: str) -> tuple[list[str], list[str]]:
+    if select_mode == "latest-5":
+        return ids[:5], video_lines[:5]
+    if select_mode == "oldest-5":
+        return ids[-5:], video_lines[-5:]
+    return ids, video_lines
+
+
+def write_source_files(source_dir: Path, ids: list[str], video_lines: list[str], mode: str, input_value: str, select_mode: str) -> None:
     source_dir.mkdir(parents=True, exist_ok=True)
     (source_dir / "selected-video-ids.txt").write_text("\n".join(ids) + "\n", encoding="utf-8")
     (source_dir / "video-list.txt").write_text("\n".join(video_lines) + "\n", encoding="utf-8")
@@ -133,6 +141,7 @@ def write_source_files(source_dir: Path, ids: list[str], video_lines: list[str],
     log_lines.append("Generated UTC: " + datetime.now(timezone.utc).isoformat())
     log_lines.append("Input mode: " + mode)
     log_lines.append("Input value: " + input_value)
+    log_lines.append("Selection mode: " + select_mode)
     log_lines.append("Selected videos: " + str(len(ids)))
     log_lines.append("")
     log_lines.append("Note: source intake only. No transcript download has been performed yet.")
@@ -146,6 +155,7 @@ def main() -> None:
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--url", help="YouTube video, playlist, channel/videos URL, or video ID")
     source.add_argument("--list-file", help="Local file containing YouTube URLs or video IDs")
+    parser.add_argument("--select-mode", choices=["all", "latest-5", "oldest-5"], default="all")
     args = parser.parse_args()
 
     run_id = safe_run_id(args.run_id)
@@ -161,8 +171,10 @@ def main() -> None:
         mode = "list-file"
         input_value = str(list_file)
 
-    write_source_files(source_dir, ids, video_lines, mode, input_value)
+    ids, video_lines = apply_select_mode(ids, video_lines, args.select_mode)
+    write_source_files(source_dir, ids, video_lines, mode, input_value, args.select_mode)
     print("SOURCE INTAKE", source_dir)
+    print("Selection mode:", args.select_mode)
     print("Selected videos:", len(ids))
     print("Wrote:", source_dir / "selected-video-ids.txt")
     print("Wrote:", source_dir / "video-list.txt")

@@ -30,15 +30,30 @@ UI_TEXT = {
         "operator_source_input": "Operator source input",
         "single_input": "Single URL/video ID",
         "list_file_input": "List-file path",
+        "targeted_input": "Targeted video list",
         "operator_url": "Operator YouTube URL or video ID",
         "operator_list_file": "Operator list-file path",
+        "operator_targeted_list": "Targeted videos, one URL or video ID per line",
         "list_file_caption": "Use a local-only text file path. File content is not previewed in the UI.",
+        "targeted_caption": "The list is saved as local-only runtime input for this run. It is not previewed as source content after launch.",
+        "subtitle_language": "Subtitle language",
+        "lang_hu": "Hungarian / hu",
+        "lang_en": "English / en",
+        "lang_hu_en": "Hungarian + English / hu,en",
+        "selection_mode": "Selection mode",
+        "select_all": "All discovered/targeted videos",
+        "select_latest": "Latest 5",
+        "select_oldest": "Oldest 5",
+        "run_type": "Run type",
+        "new_run": "New run",
+        "existing_run": "Continue existing run",
         "operator_model": "Operator model",
         "operator_limit": "Operator limit",
         "skip_model": "Skip model",
         "limit_caption": "Limit is the processing safety cap. Keep it small while validating list-file input.",
         "run_pipeline": "Run YTM pipeline",
         "source_required": "ERROR source input is required.",
+        "targeted_required": "ERROR targeted video list is required.",
         "summary_available": "YTM run summary: available",
         "summary_missing": "YTM run summary: not available yet",
         "resume_status": "Resume / skip-existing status",
@@ -112,15 +127,30 @@ UI_TEXT = {
         "operator_source_input": "Operátori forrásbemenet",
         "single_input": "Egy URL/video ID",
         "list_file_input": "Listafájl útvonal",
+        "targeted_input": "Célzott videólista",
         "operator_url": "YouTube URL vagy video ID",
         "operator_list_file": "Listafájl helyi útvonala",
+        "operator_targeted_list": "Célzott videók, soronként egy URL vagy video ID",
         "list_file_caption": "Helyi, lokális listafájl útvonal. A fájl tartalmát a UI nem jeleníti meg.",
+        "targeted_caption": "A lista lokális runtime inputként kerül mentésre ehhez a runhoz. Indítás után nem jelenik meg forrástartalomként.",
+        "subtitle_language": "Feliratnyelv",
+        "lang_hu": "Magyar / hu",
+        "lang_en": "Angol / en",
+        "lang_hu_en": "Magyar + angol / hu,en",
+        "selection_mode": "Futtatási mód",
+        "select_all": "Minden megtalált/célzott videó",
+        "select_latest": "Legújabb 5",
+        "select_oldest": "Legrégebbi 5",
+        "run_type": "Futás típusa",
+        "new_run": "Új futás",
+        "existing_run": "Meglévő futás folytatása",
         "operator_model": "Operátori modell",
         "operator_limit": "Operátori limit",
         "skip_model": "Modell kihagyása",
         "limit_caption": "A limit a feldolgozási biztonsági sapka. Listafájl tesztnél maradjon kicsi.",
         "run_pipeline": "YTM pipeline indítása",
         "source_required": "HIBA: forrásbemenet szükséges.",
+        "targeted_required": "HIBA: célzott videólista szükséges.",
         "summary_available": "YTM run summary: elérhető",
         "summary_missing": "YTM run summary: még nem elérhető",
         "resume_status": "Folytatás / meglévők kihagyása",
@@ -323,6 +353,15 @@ def write_uploaded_source(run_id: str, uploaded_file) -> Path:
     target.write_bytes(uploaded_file.getbuffer())
     return target
 
+def write_targeted_video_list(run_id: str, value: str) -> Path:
+    run_id = safe_run_id(run_id)
+    lines = [line.strip() for line in value.splitlines() if line.strip()]
+    target_dir = OUTPUT_ROOT / run_id / "source"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = target_dir / "operator-targeted-video-list.txt"
+    target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return target
+
 for key in ["safety_audit_output", "create_run_output", "workspace_dashboard_output", "upload_output", "youtube_intake_output", "operator_brief_output", "pipeline_smoke_output", "url_pipeline_output", "operator_mode_output"]:
     if key not in st.session_state:
         st.session_state[key] = ""
@@ -342,49 +381,102 @@ st.info(tr("intro"))
 st.subheader(tr("operator_mode"))
 st.caption(tr("operator_caption"))
 
+available_runs = list_runs()
+
 st.markdown("#### " + tr("source_section"))
 operator_input_mode = st.radio(
     tr("operator_source_input"),
-    ["single", "list-file"],
+    ["single", "list-file", "targeted-list"],
     horizontal=True,
-    format_func=lambda value: tr("single_input") if value == "single" else tr("list_file_input"),
+    format_func=lambda value: {
+        "single": tr("single_input"),
+        "list-file": tr("list_file_input"),
+        "targeted-list": tr("targeted_input"),
+    }[value],
     key="operator_input_mode",
 )
 
 operator_url = ""
 operator_list_file = ""
+operator_targeted_list = ""
 if operator_input_mode == "single":
     operator_url = st.text_input(tr("operator_url"), key="operator_url")
-else:
+elif operator_input_mode == "list-file":
     operator_list_file = st.text_input(tr("operator_list_file"), key="operator_list_file")
     st.caption(tr("list_file_caption"))
+else:
+    operator_targeted_list = st.text_area(tr("operator_targeted_list"), height=140, key="operator_targeted_list")
+    st.caption(tr("targeted_caption"))
 
 st.markdown("#### " + tr("run_settings"))
+run_type = st.radio(
+    tr("run_type"),
+    ["new", "existing"],
+    horizontal=True,
+    format_func=lambda value: tr("new_run") if value == "new" else tr("existing_run"),
+    key="operator_run_type",
+)
+
 settings_col0, settings_col1, settings_col2, settings_col3 = st.columns([1.4, 1, 0.7, 0.7])
 with settings_col0:
-    operator_run_id = st.text_input(tr("operator_run_id"), value="ytm-operator-001", key="operator_run_id")
+    if run_type == "existing" and available_runs:
+        operator_run_id = st.selectbox(tr("operator_run_id"), available_runs, index=len(available_runs) - 1, key="operator_existing_run_id")
+    else:
+        operator_run_id = st.text_input(tr("operator_run_id"), value="ytm-operator-001", key="operator_run_id")
 with settings_col1:
     operator_model = st.text_input(tr("operator_model"), value="qwen2.5:7b", key="operator_model")
 with settings_col2:
     operator_limit = st.number_input(tr("operator_limit"), min_value=1, value=1, step=1, key="operator_limit")
 with settings_col3:
     operator_skip_model = st.checkbox(tr("skip_model"), value=False, key="operator_skip_model")
+
+option_col1, option_col2 = st.columns(2)
+with option_col1:
+    operator_langs = st.selectbox(
+        tr("subtitle_language"),
+        ["hu", "en", "hu,en"],
+        index=2,
+        format_func=lambda value: {"hu": tr("lang_hu"), "en": tr("lang_en"), "hu,en": tr("lang_hu_en")}[value],
+        key="operator_langs",
+    )
+with option_col2:
+    operator_select_mode = st.selectbox(
+        tr("selection_mode"),
+        ["all", "latest-5", "oldest-5"],
+        index=0,
+        format_func=lambda value: {
+            "all": tr("select_all"),
+            "latest-5": tr("select_latest"),
+            "oldest-5": tr("select_oldest"),
+        }[value],
+        key="operator_select_mode",
+    )
 st.caption(tr("limit_caption"))
 
 st.markdown("#### " + tr("operator_actions"))
 if st.button(tr("run_pipeline"), key="operator_run_pipeline"):
     operator_source_value = operator_url.strip() if operator_input_mode == "single" else operator_list_file.strip()
+    source_flag = "--url" if operator_input_mode == "single" else "--list-file"
+    if operator_input_mode == "targeted-list":
+        if operator_targeted_list.strip():
+            operator_source_value = str(write_targeted_video_list(operator_run_id, operator_targeted_list))
+        else:
+            operator_source_value = ""
     if operator_source_value:
         command = [
             "python3",
             "apps/youtube_mining/scripts/run_ytm_url_pipeline.py",
             operator_run_id,
-            "--url" if operator_input_mode == "single" else "--list-file",
+            source_flag,
             operator_source_value,
             "--model",
             operator_model.strip() or "qwen2.5:7b",
             "--limit",
             str(int(operator_limit)),
+            "--langs",
+            operator_langs,
+            "--select-mode",
+            operator_select_mode,
         ]
         if operator_skip_model:
             command.append("--skip-model")

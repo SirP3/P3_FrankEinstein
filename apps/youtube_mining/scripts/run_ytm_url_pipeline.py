@@ -105,6 +105,8 @@ def main() -> None:
     source.add_argument("--list-file", help="Local file containing YouTube URLs or video IDs")
     parser.add_argument("--model", default="qwen2.5:7b")
     parser.add_argument("--limit", type=int, default=1)
+    parser.add_argument("--langs", default="hu,en")
+    parser.add_argument("--select-mode", choices=["all", "latest-5", "oldest-5"], default="all")
     parser.add_argument("--skip-model", action="store_true")
     args = parser.parse_args()
 
@@ -114,7 +116,7 @@ def main() -> None:
     stages: list[dict[str, str]] = []
     final_status = "pass"
 
-    smoke_args = [args.run_id, "--model", args.model, "--limit", str(args.limit)]
+    smoke_args = [args.run_id, "--model", args.model, "--limit", str(args.limit), "--langs", args.langs]
     if args.skip_model:
         smoke_args.append("--skip-model")
 
@@ -129,7 +131,7 @@ def main() -> None:
 
     pipeline = [
         ("create run folder", "create_run_folder.py", [args.run_id]),
-        ("YouTube source intake", "intake_youtube_source.py", [args.run_id, *source_args]),
+        ("YouTube source intake", "intake_youtube_source.py", [args.run_id, *source_args, "--select-mode", args.select_mode]),
         ("full pipeline smoke", "run_ytm_pipeline_smoke.py", smoke_args),
     ]
 
