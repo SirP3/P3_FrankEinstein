@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 import subprocess
+import sys
 
 try:
     import streamlit as st
@@ -57,6 +58,9 @@ def pipeline_smoke_report_path(run_id: str) -> Path:
 
 def ytm_run_summary_path(run_id: str) -> Path:
     return OUTPUT_ROOT / run_id / "handoffs" / "ytm_run_summary.md"
+
+def run_output_folder(run_id: str) -> Path:
+    return OUTPUT_ROOT / safe_run_id(run_id)
 
 def run_summary_files(run_id: str) -> list[tuple[str, Path]]:
     run_dir = OUTPUT_ROOT / run_id
@@ -177,6 +181,16 @@ if operator_summary.exists():
     st.write("handoffs/ytm_run_summary.md")
 else:
     st.write("YTM run summary: not available yet")
+
+operator_output_folder = run_output_folder(operator_run_id)
+st.write("Output folder")
+st.code(str(operator_output_folder))
+if operator_output_folder.exists():
+    st.write("Output folder: available")
+    if sys.platform == "darwin" and st.button("Open output folder in Finder"):
+        subprocess.run(["open", str(operator_output_folder)], check=False)
+else:
+    st.write("output folder not found yet")
 
 st.subheader("Local YTM runs")
 
