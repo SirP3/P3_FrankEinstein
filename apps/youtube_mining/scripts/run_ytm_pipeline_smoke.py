@@ -106,6 +106,11 @@ def refresh_run_summary(run_id: str) -> bool:
     return ok
 
 
+def refresh_handoff_package(run_id: str) -> bool:
+    ok, _ = run_script("build_handoff_package.py", [run_id])
+    return ok
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the existing YTM v0.2 pipeline as a local smoke test.")
     parser.add_argument("run_id")
@@ -198,6 +203,13 @@ def main() -> None:
             print("Report path:", report)
             raise SystemExit(1)
 
+        if not run_required_stage(stages, "build handoff package", "build_handoff_package.py", [args.run_id]):
+            final_status = "fail"
+            report = write_report(args.run_id, args.model, args.skip_model, stages, final_status)
+            print_summary(stages)
+            print("Report path:", report)
+            raise SystemExit(1)
+
     if not run_required_stage(stages, "build YTM run summary", "build_ytm_run_summary.py", [args.run_id]):
         final_status = "fail"
         report = write_report(args.run_id, args.model, args.skip_model, stages, final_status)
@@ -206,6 +218,12 @@ def main() -> None:
         raise SystemExit(1)
 
     report = write_report(args.run_id, args.model, args.skip_model, stages, final_status)
+    if has_radar_cards(args.run_id) and not refresh_handoff_package(args.run_id):
+        final_status = "fail"
+        report = write_report(args.run_id, args.model, args.skip_model, stages, final_status)
+        print_summary(stages)
+        print("Report path:", report)
+        raise SystemExit(1)
     if not refresh_run_summary(args.run_id):
         final_status = "fail"
         report = write_report(args.run_id, args.model, args.skip_model, stages, final_status)

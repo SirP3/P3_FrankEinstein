@@ -25,7 +25,6 @@ This is enough for a small end-to-end operator run, but it is not yet the full o
 - Browser-session handling for harder YouTube transcript access cases
 - Content-hours calculation
 - Rich transcript success / fail / unavailable detail in operator evidence
-- Full handoff package generation
 - Comment extraction as a later, separate layer
 
 ## Future Backlog Notes

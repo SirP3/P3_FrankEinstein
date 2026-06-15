@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[3]
 OUTPUT_ROOT = ROOT / "output" / "youtube_mining"
 
 INPUT_PATHS = [
+    "handoffs/handoff_pack.md",
     "handoffs/operator_brief.md",
     "handoffs/radar_card_brief.md",
     "handoffs/ytm_pipeline_smoke_report.md",
@@ -142,6 +143,8 @@ def write_summary(run_id: str, run_dir: Path, handoffs_dir: Path) -> Path:
     lines.append("")
     lines.append("## Handoff Outputs")
     lines.append("")
+    lines.append("- handoff_pack.md: " + status_for(run_dir / "handoffs" / "handoff_pack.md"))
+    lines.append("- run-bound handoff alias: " + status_for(run_dir / "handoffs" / (run_id + "__handoff_pack.md")))
     lines.append("- operator_brief.md: " + status_for(run_dir / "handoffs" / "operator_brief.md"))
     lines.append("- radar_card_brief.md: " + status_for(run_dir / "handoffs" / "radar_card_brief.md"))
     lines.append("- ytm_pipeline_smoke_report.md: " + status_for(run_dir / "handoffs" / "ytm_pipeline_smoke_report.md"))
