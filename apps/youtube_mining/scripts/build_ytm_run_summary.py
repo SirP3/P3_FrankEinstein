@@ -79,11 +79,24 @@ def final_status(run_dir: Path) -> str:
 def write_summary(run_id: str, run_dir: Path, handoffs_dir: Path) -> Path:
     transcript_index = run_dir / "derived" / "transcript_index.md"
     model_manifest = run_dir / "derived" / "model_input_manifest.md"
+    source_log = run_dir / "source" / "source-intake-log.md"
+    transcript_log = run_dir / "source" / "transcript-intake-log.md"
     validation_report = run_dir / "derived" / "radar_cards" / "radar-card-validation-report.md"
     combined_radar = run_dir / "derived" / "radar_cards" / "all-video-radar-cards-combined.md"
     keyword_index = run_dir / "derived" / "radar_cards" / "radar_keyword_index_001.md"
     quality_pass = run_dir / "derived" / "radar_cards" / "qwinni_quality_pass_001.md"
 
+    source_values = read_key_values(source_log, ["Selected content hours"])
+    transcript_log_values = read_key_values(
+        transcript_log,
+        [
+            "Successful transcript count",
+            "Failed transcript count",
+            "Skipped existing count",
+            "Skipped by limit count",
+            "Transcript outcome status",
+        ],
+    )
     transcript_values = read_key_values(transcript_index, ["Transcript TXT file count", "Total characters"])
     model_values = read_key_values(model_manifest, ["Transcript TXT file count", "Total characters"])
     model_counts = model_manifest_counts(model_manifest)
@@ -111,6 +124,12 @@ def write_summary(run_id: str, run_dir: Path, handoffs_dir: Path) -> Path:
     lines.append("")
     lines.append("- Transcript TXT file count: " + transcript_values.get("Transcript TXT file count", "not available"))
     lines.append("- Total characters: " + transcript_values.get("Total characters", "not available"))
+    lines.append("- Content hours: " + source_values.get("Selected content hours", "not available"))
+    lines.append("- Successful transcript count: " + transcript_log_values.get("Successful transcript count", "not available"))
+    lines.append("- Failed transcript count: " + transcript_log_values.get("Failed transcript count", "not available"))
+    lines.append("- Skipped existing count: " + transcript_log_values.get("Skipped existing count", "not available"))
+    lines.append("- Skipped by limit count: " + transcript_log_values.get("Skipped by limit count", "not available"))
+    lines.append("- Transcript outcome status: " + transcript_log_values.get("Transcript outcome status", "not available"))
     lines.append("")
     lines.append("## Model Input Summary")
     lines.append("")

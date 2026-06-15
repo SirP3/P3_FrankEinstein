@@ -42,22 +42,29 @@ def existing_transcript_files(transcripts_dir: Path, video_id: str) -> list[Path
     ])
 
 
-def download_transcripts(video_ids: list[str], transcripts_dir: Path, langs: str, limit: int) -> tuple[list[str], int, int]:
+def download_transcripts(video_ids: list[str], transcripts_dir: Path, langs: str, limit: int) -> tuple[list[str], dict[str, int]]:
     yt_dlp = require_yt_dlp()
     transcripts_dir.mkdir(parents=True, exist_ok=True)
     results = []
-    processed_count = 0
-    skipped_count = 0
+    counts = {
+        "processed_attempts": 0,
+        "successful": 0,
+        "failed": 0,
+        "skipped_existing": 0,
+        "skipped_by_limit": 0,
+    }
 
     for video_id in video_ids:
         if existing_transcript_files(transcripts_dir, video_id):
-            skipped_count += 1
+            counts["skipped_existing"] += 1
             results.append("skipped existing transcript " + video_id)
             continue
-        if processed_count >= limit:
+        if counts["processed_attempts"] >= limit:
+            counts["skipped_by_limit"] += 1
             results.append("limit reached before " + video_id)
             continue
 
+        before = set(existing_transcript_files(transcripts_dir, video_id))
         cmd = [
             yt_dlp,
             "--skip-download",
@@ -72,27 +79,40 @@ def download_transcripts(video_ids: list[str], transcripts_dir: Path, langs: str
             video_url(video_id),
         ]
         result = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
-        status = "ok" if result.returncode == 0 else "warning"
+        after = set(existing_transcript_files(transcripts_dir, video_id))
+        wrote_new = bool(after - before)
+        status = "ok" if wrote_new else "warning"
         results.append(status + " " + video_id)
-        processed_count += 1
+        counts["processed_attempts"] += 1
+        if wrote_new:
+            counts["successful"] += 1
+        else:
+            counts["failed"] += 1
         if result.stdout.strip():
             results.append(result.stdout.strip()[-1200:])
 
-    return results, processed_count, skipped_count
+    return results, counts
 
 
-def write_log(run_id: str, run_dir: Path, selected_count: int, processed_count: int, skipped_count: int, limit: int, langs: str, output_folder: Path) -> None:
+def write_log(run_id: str, run_dir: Path, selected_count: int, counts: dict[str, int], limit: int, langs: str, output_folder: Path) -> None:
     log_path = run_dir / "source" / "transcript-intake-log.md"
+    outcome = "complete"
+    if counts["failed"] > 0 or counts["skipped_by_limit"] > 0:
+        outcome = "incomplete"
     lines = []
     lines.append("# YouTube Transcript Intake Log")
     lines.append("")
     lines.append("Run ID: " + run_id)
     lines.append("Generated UTC: " + datetime.now(timezone.utc).isoformat())
     lines.append("Selected video count: " + str(selected_count))
-    lines.append("Processed video count: " + str(processed_count))
-    lines.append("Skipped existing count: " + str(skipped_count))
+    lines.append("Processed video count: " + str(counts["processed_attempts"]))
+    lines.append("Successful transcript count: " + str(counts["successful"]))
+    lines.append("Failed transcript count: " + str(counts["failed"]))
+    lines.append("Skipped existing count: " + str(counts["skipped_existing"]))
+    lines.append("Skipped by limit count: " + str(counts["skipped_by_limit"]))
     lines.append("Processing limit: " + str(limit))
     lines.append("Language setting: " + langs)
+    lines.append("Transcript outcome status: " + outcome)
     lines.append("Output folder: " + str(output_folder))
     lines.append("")
     lines.append("Note: transcript files are runtime source data and must not be committed.")
@@ -114,13 +134,16 @@ def main() -> None:
     video_ids = read_selected_video_ids(run_dir)
     transcripts_dir = run_dir / "source" / "transcripts"
 
-    results, processed_count, skipped_count = download_transcripts(video_ids, transcripts_dir, args.langs, args.limit)
-    write_log(args.run_id, run_dir, len(video_ids), processed_count, skipped_count, args.limit, args.langs, transcripts_dir)
+    results, counts = download_transcripts(video_ids, transcripts_dir, args.langs, args.limit)
+    write_log(args.run_id, run_dir, len(video_ids), counts, args.limit, args.langs, transcripts_dir)
 
     print("TRANSCRIPT INTAKE", transcripts_dir)
     print("Selected video count:", len(video_ids))
-    print("Processed video count:", processed_count)
-    print("Skipped existing count:", skipped_count)
+    print("Processed video count:", counts["processed_attempts"])
+    print("Successful transcript count:", counts["successful"])
+    print("Failed transcript count:", counts["failed"])
+    print("Skipped existing count:", counts["skipped_existing"])
+    print("Skipped by limit count:", counts["skipped_by_limit"])
     print("Processing limit:", args.limit)
     print("Language setting:", args.langs)
     print("Wrote:", run_dir / "source" / "transcript-intake-log.md")

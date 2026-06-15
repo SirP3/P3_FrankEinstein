@@ -31,6 +31,33 @@ def video_url(video_id: str) -> str:
     return "https://www.youtube.com/watch?v=" + video_id
 
 
+def duration_seconds(value: str) -> int:
+    value = value.strip()
+    if not value or value == "NA":
+        return 0
+    parts = value.split(":")
+    try:
+        numbers = [int(part) for part in parts]
+    except ValueError:
+        return 0
+    if len(numbers) == 2:
+        minutes, seconds = numbers
+        return minutes * 60 + seconds
+    if len(numbers) == 3:
+        hours, minutes, seconds = numbers
+        return hours * 3600 + minutes * 60 + seconds
+    return 0
+
+
+def total_duration_seconds(video_lines: list[str]) -> int:
+    total = 0
+    for line in video_lines:
+        parts = [part.strip() for part in line.split(" | ")]
+        if len(parts) >= 2:
+            total += duration_seconds(parts[1])
+    return total
+
+
 def require_yt_dlp() -> str:
     yt_dlp = shutil.which("yt-dlp")
     if not yt_dlp:
@@ -133,6 +160,7 @@ def write_source_files(source_dir: Path, ids: list[str], video_lines: list[str],
     source_dir.mkdir(parents=True, exist_ok=True)
     (source_dir / "selected-video-ids.txt").write_text("\n".join(ids) + "\n", encoding="utf-8")
     (source_dir / "video-list.txt").write_text("\n".join(video_lines) + "\n", encoding="utf-8")
+    duration_total = total_duration_seconds(video_lines)
 
     log_lines = []
     log_lines.append("# YouTube Source Intake Log")
@@ -143,6 +171,8 @@ def write_source_files(source_dir: Path, ids: list[str], video_lines: list[str],
     log_lines.append("Input value: " + input_value)
     log_lines.append("Selection mode: " + select_mode)
     log_lines.append("Selected videos: " + str(len(ids)))
+    log_lines.append("Selected content duration seconds: " + str(duration_total))
+    log_lines.append("Selected content hours: " + f"{duration_total / 3600:.2f}")
     log_lines.append("")
     log_lines.append("Note: source intake only. No transcript download has been performed yet.")
     log_lines.append("Note: runtime output is local-only.")

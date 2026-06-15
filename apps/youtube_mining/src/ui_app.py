@@ -31,6 +31,8 @@ UI_TEXT = {
         "source_input": "Source input",
         "selected_videos": "Selected videos",
         "successful_transcript": "Successful transcripts",
+        "failed_transcript": "Failed or unavailable transcripts",
+        "skipped_by_limit": "Skipped by limit",
         "skipped_existing": "Skipped as existing",
         "transcript_coverage": "Transcript coverage",
         "coverage_good": "good",
@@ -176,6 +178,8 @@ UI_TEXT = {
         "source_input": "Forrásbemenet",
         "selected_videos": "Kiválasztott videók",
         "successful_transcript": "Sikeres transcript",
+        "failed_transcript": "Sikertelen vagy nem elérhető transcript",
+        "skipped_by_limit": "Limit miatt kihagyva",
         "skipped_existing": "Meglévőként kihagyva",
         "transcript_coverage": "Transcript lefedettség",
         "coverage_good": "jó",
@@ -583,11 +587,18 @@ def evidence_card_data(run_id: str) -> dict[str, str]:
     run_dir = OUTPUT_ROOT / run_id
     source_values = read_log_values(
         run_dir / "source" / "source-intake-log.md",
-        ["Input mode", "Input value", "Selected videos"],
+        ["Input mode", "Input value", "Selected videos", "Selected content hours"],
     )
     intake_values = read_log_values(
         run_dir / "source" / "transcript-intake-log.md",
-        ["Selected video count", "Processed video count", "Skipped existing count"],
+        [
+            "Selected video count",
+            "Processed video count",
+            "Successful transcript count",
+            "Failed transcript count",
+            "Skipped existing count",
+            "Skipped by limit count",
+        ],
     )
     conversion_values = read_log_values(
         run_dir / "derived" / "transcript-conversion-log.md",
@@ -596,7 +607,7 @@ def evidence_card_data(run_id: str) -> dict[str, str]:
     counts = validation_counts(run_id)
 
     selected_videos = intake_values.get("Selected video count", source_values.get("Selected videos", "not available"))
-    transcript_processed = intake_values.get("Processed video count", "not available")
+    transcript_processed = intake_values.get("Successful transcript count", intake_values.get("Processed video count", "not available"))
 
     return {
         tr("operator_run_id"): run_id,
@@ -604,6 +615,8 @@ def evidence_card_data(run_id: str) -> dict[str, str]:
         tr("source_input"): source_values.get("Input value", "not available"),
         tr("selected_videos"): selected_videos,
         tr("successful_transcript"): transcript_processed,
+        tr("failed_transcript"): intake_values.get("Failed transcript count", "not available"),
+        tr("skipped_by_limit"): intake_values.get("Skipped by limit count", "not available"),
         tr("skipped_existing"): intake_values.get("Skipped existing count", "not available"),
         tr("transcript_coverage"): transcript_coverage_label(transcript_processed),
         tr("conversion_processed"): conversion_values.get("Processed file count", "not available"),
@@ -612,7 +625,7 @@ def evidence_card_data(run_id: str) -> dict[str, str]:
         tr("validation_passed"): counts.get("Passed count", "not available"),
         tr("validation_warnings"): counts.get("Warning count", "not available"),
         tr("validation_failed"): counts.get("Failed count", "not available"),
-        tr("content_hours"): tr("content_hours_placeholder"),
+        tr("content_hours"): source_values.get("Selected content hours", tr("content_hours_placeholder")),
         tr("output_folder"): str(run_output_folder(run_id)),
         tr("handoff_summary"): str(ytm_run_summary_path(run_id)) if ytm_run_summary_path(run_id).exists() else "not available",
         tr("final_status_label"): final_status_label(run_id),

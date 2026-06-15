@@ -50,10 +50,20 @@ def build_package(run_id: str, run_dir: Path, handoffs_dir: Path) -> tuple[Path,
     operator_brief = handoffs_dir / "operator_brief.md"
     smoke_report = handoffs_dir / "ytm_pipeline_smoke_report.md"
 
-    source_values = read_key_values(source_log, ["Input mode", "Input value", "Selected videos"])
+    source_values = read_key_values(source_log, ["Input mode", "Input value", "Selected videos", "Selected content hours"])
     transcript_values = read_key_values(
         transcript_log,
-        ["Selected video count", "Processed video count", "Skipped existing count", "Processing limit", "Language setting"],
+        [
+            "Selected video count",
+            "Processed video count",
+            "Successful transcript count",
+            "Failed transcript count",
+            "Skipped existing count",
+            "Skipped by limit count",
+            "Processing limit",
+            "Language setting",
+            "Transcript outcome status",
+        ],
     )
     conversion_values = read_key_values(
         conversion_log,
@@ -93,12 +103,17 @@ def build_package(run_id: str, run_dir: Path, handoffs_dir: Path) -> tuple[Path,
     lines.append("- Source mode: " + source_values.get("Input mode", "not available"))
     lines.append("- Source input: " + source_values.get("Input value", "not available"))
     lines.append("- Subtitle language: " + transcript_values.get("Language setting", "not available"))
+    lines.append("- Content hours: " + source_values.get("Selected content hours", "not available"))
     lines.append("")
     lines.append("## Processing Counts")
     lines.append("")
     lines.append("- Selected videos: " + transcript_values.get("Selected video count", source_values.get("Selected videos", "not available")))
     lines.append("- Transcript processed: " + transcript_values.get("Processed video count", "not available"))
+    lines.append("- Successful transcript count: " + transcript_values.get("Successful transcript count", "not available"))
+    lines.append("- Failed transcript count: " + transcript_values.get("Failed transcript count", "not available"))
     lines.append("- Transcript skipped existing: " + transcript_values.get("Skipped existing count", "not available"))
+    lines.append("- Transcript skipped by limit: " + transcript_values.get("Skipped by limit count", "not available"))
+    lines.append("- Transcript outcome status: " + transcript_values.get("Transcript outcome status", "not available"))
     lines.append("- Conversion processed: " + conversion_values.get("Processed file count", "not available"))
     lines.append("- Conversion skipped existing: " + conversion_values.get("Skipped existing count", "not available"))
     lines.append("- Model packet count: " + model_packet_values.get("Packet file count", "not available"))
